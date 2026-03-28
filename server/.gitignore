@@ -1,0 +1,14 @@
+# https://dart.dev/guides/libraries/private-files
+# Created by `dart pub`
+.dart_tool/
+/storage/
+/data/
+
+/playground/
+
+# Docusaurus
+docs/node_modules/
+docs/build/
+docs/.docusaurus/
+
+

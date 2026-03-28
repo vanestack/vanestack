@@ -1,0 +1,7 @@
+builders:
+  routeBuilder:
+    import: "package:vanestack_generator/route_builder.dart"
+    builder_factories: ["routeBuilder"]
+    build_extensions: { "$package$": ["lib/src/routes.dart", "lib/src/routes_info.dart"] }
+    build_to: source
+    auto_apply: root_package

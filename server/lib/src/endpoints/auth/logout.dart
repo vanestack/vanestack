@@ -1,0 +1,26 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:vanestack_common/vanestack_common.dart';
+import 'package:shelf/shelf.dart';
+
+import '../../../tools/route.dart';
+import '../../utils/extensions.dart';
+import '../../utils/http_method.dart';
+
+@Route(path: '/v1/auth/logout', method: HttpMethod.delete, requireAuth: true)
+FutureOr<void> logout(Request request) async {
+  final accessToken = request.bearerToken;
+
+  if (accessToken == null || accessToken.isEmpty) {
+    throw VaneStackException(
+      'Missing access token.',
+      status: HttpStatus.badRequest,
+    );
+  }
+
+  return request.auth.logout(
+    accessToken: accessToken,
+    userId: request.userId,
+  );
+}

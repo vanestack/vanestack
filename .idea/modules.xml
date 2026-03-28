@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+<module fileurl="file://$PROJECT_DIR$/server/melos_vanestack.iml" filepath="$PROJECT_DIR$/server/melos_vanestack.iml"/>
+<module fileurl="file://$PROJECT_DIR$/annotation/melos_vanestack_annotation.iml" filepath="$PROJECT_DIR$/annotation/melos_vanestack_annotation.iml"/>
+<module fileurl="file://$PROJECT_DIR$/client/melos_vanestack_client.iml" filepath="$PROJECT_DIR$/client/melos_vanestack_client.iml"/>
+<module fileurl="file://$PROJECT_DIR$/common/melos_vanestack_common.iml" filepath="$PROJECT_DIR$/common/melos_vanestack_common.iml"/>
+<module fileurl="file://$PROJECT_DIR$/generator/melos_vanestack_generator.iml" filepath="$PROJECT_DIR$/generator/melos_vanestack_generator.iml"/>
+<module fileurl="file://$PROJECT_DIR$/melos_vanestack_workspace.iml" filepath="$PROJECT_DIR$/melos_vanestack_workspace.iml"/>
+    </modules>
+  </component>
+</project>

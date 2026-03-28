@@ -1,0 +1,11 @@
+benchmark/
+auth_experiments/
+cloud/
+test_app/
+data/
+.DS_Store
+.dart_tool/
+build/
+*.g.dart
+pubspec.lock
+firebase-debug.log

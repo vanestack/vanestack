@@ -1,0 +1,76 @@
+@layer base {
+  :root {
+    --background: 210 20% 99%;
+    --foreground: 222 47% 11%;
+    --card: 210 20% 98%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 222 47% 11%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 214 20% 95%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 20% 95%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 214 20% 95%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 20% 91%;
+    --input: 214 20% 91%;
+    --ring: 222 47% 11%;
+    --radius: 0.625rem;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 92% 20%;
+    --success: 142 71% 45%;
+    --success-foreground: 142 71% 15%;
+    --info: 221 83% 53%;
+    --info-foreground: 221 83% 20%;
+    --chart-1: 221 83% 53%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 263 70% 50%;
+    --chart-4: 330 81% 60%;
+    --chart-5: 43 74% 66%;
+  }
+
+  .dark {
+    --background: 222 47% 5%;
+    --foreground: 210 20% 98%;
+    --card: 222 40% 7%;
+    --card-foreground: 210 20% 98%;
+    --popover: 222 40% 7%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 210 20% 98%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 222 30% 14%;
+    --muted-foreground: 215 16% 57%;
+    --accent: 222 30% 14%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 30% 16%;
+    --input: 222 30% 16%;
+    --ring: 210 20% 90%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 45 93% 90%;
+    --success: 142 71% 45%;
+    --success-foreground: 142 71% 90%;
+    --info: 217 91% 60%;
+    --info-foreground: 217 91% 90%;
+    --chart-1: 221 83% 53%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 263 70% 50%;
+    --chart-4: 330 81% 60%;
+    --chart-5: 43 74% 66%;
+  }
+
+  * {
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  .dark img[src*="simple-icons"] {
+    filter: invert(1);
+  }
+}

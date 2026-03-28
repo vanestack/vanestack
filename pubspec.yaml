@@ -1,0 +1,18 @@
+name: vanestack_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.9.2
+
+workspace:
+  - annotation
+  - common
+  - client
+  - server
+  - generator
+
+melos:
+  repository: https://github.com/vanestack/vanestack
+dev_dependencies:
+  melos: ^7.5.0
+

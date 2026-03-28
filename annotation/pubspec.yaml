@@ -1,0 +1,13 @@
+name: vanestack_annotation
+description: Annotations and metadata types for the VaneStack Dart backend framework.
+version: 0.1.0
+repository: https://github.com/vanestack/vanestack
+homepage: https://vanestack.dev
+resolution: workspace
+topics:
+  - server
+  - backend
+  - codegen
+
+environment:
+  sdk: ^3.9.2

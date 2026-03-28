@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@import "./basecoat.css";
+@import "./theme.css";
+
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+/* ── VaneStack Design System ─────────────────── */
+
+/* Typography */
+.font-display {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Gradient text using logo colors */
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 30%, #8b5cf6 65%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Login gradient panel */
+.login-gradient {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e1b4b 40%, #2d1b4e 70%, #4a1942 100%);
+}
+
+.login-grid-overlay {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Layout utilities ──────────────────────────── */
+
+.sheet-closed {
+  transform: translateX(100%);
+}
+
+.sheet-open {
+  transform: translateX(0);
+}
+
+.backdrop-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.backdrop-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.toaster {
+  z-index: 100;
+}

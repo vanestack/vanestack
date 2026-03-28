@@ -1,0 +1,1 @@
+tailwindcss -i web/styles.tw.css -o web/styles.css --content "./{lib,web}**/*.dart"

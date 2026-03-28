@@ -1,0 +1,21 @@
+name: vanestack_client
+description: HTTP client SDK for interacting with VaneStack backend servers.
+version: 0.1.0
+repository: https://github.com/vanestack/vanestack
+homepage: https://vanestack.dev
+resolution: workspace
+topics:
+  - http-client
+  - api-client
+  - server
+
+environment:
+  sdk: ^3.9.2
+dependencies:
+  crypto: ^3.0.6
+  http: ^1.5.0
+  vanestack_common: ^0.1.0
+  sse_channel: ^0.2.2
+  http_parser: ^4.1.2
+dev_dependencies:
+  test: ^1.25.6

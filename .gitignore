@@ -6,6 +6,5 @@ data/
 .DS_Store
 .dart_tool/
 build/
-*.g.dart
 pubspec.lock
 firebase-debug.log

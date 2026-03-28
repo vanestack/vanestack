@@ -39,7 +39,7 @@ part 'database.g.dart';
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor, String path = './database.sqlite'])
-      : super(executor ?? _openConnection(path));
+    : super(executor ?? _openConnection(path));
 
   @override
   int get schemaVersion => 7;
@@ -81,10 +81,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   static QueryExecutor _openConnection(String path) {
-    return NativeDatabase.createInBackground(
-      io.File(path),
-      setup: setup,
-    );
+    return NativeDatabase.createInBackground(io.File(path), setup: setup);
   }
 
   static void setup(Database database) {

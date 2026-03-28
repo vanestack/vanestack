@@ -1,6 +1,6 @@
 name: vanestack_common
 description: Shared models and utilities for the VaneStack Dart backend framework.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/vanestack/vanestack
 homepage: https://vanestack.dev
 resolution: workspace

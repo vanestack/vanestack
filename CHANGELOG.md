@@ -15,6 +15,27 @@ Packages with breaking changes:
 
 Packages with other changes:
 
+ - [`vanestack` - `v0.1.1+1`](#vanestack---v0111)
+
+---
+
+#### `vanestack` - `v0.1.1+1`
+
+ - **FIX**: commit generated database file.
+
+
+## 2026-03-28
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
  - [`vanestack` - `v0.1.1`](#vanestack---v011)
  - [`vanestack_annotation` - `v0.1.1`](#vanestack_annotation---v011)
  - [`vanestack_client` - `v0.1.1`](#vanestack_client---v011)

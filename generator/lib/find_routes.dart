@@ -6,6 +6,7 @@ import 'package:source_gen/source_gen.dart';
 
 import 'package:vanestack_annotation/vanestack_annotation.dart';
 
+/// Represents the details of a server route extracted from annotated functions.
 typedef RouteDetail = ({
   String functionName,
   String import,
@@ -19,6 +20,7 @@ typedef RouteDetail = ({
   bool requiresSuperUserAuth,
 });
 
+/// Scans the source code for functions annotated with @Route and extracts route details.
 Future<List<RouteDetail>> findRoutes(BuildStep buildStep) async {
   final dartFiles = Glob('lib/**.dart');
   final routes = <RouteDetail>[];

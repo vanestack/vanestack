@@ -10,8 +10,11 @@ import 'package:dart_style/dart_style.dart';
 
 import 'find_routes.dart';
 
+/// Exposes the routeBuilder function to be used as a builder in build.yaml.
 Builder routeBuilder(BuilderOptions options) => RouteBuilder();
 
+/// Builder that generates route handlers based on functions annotated with @Route.
+/// Generates two files: routes.dart with the actual route handlers and routes_info.dart with metadata about the routes for client generation.
 class RouteBuilder implements Builder {
   final _dartFormatter = DartFormatter(
     languageVersion: DartFormatter.latestLanguageVersion,
@@ -615,10 +618,12 @@ class RouteBuilder implements Builder {
         final isOptional = param.isOptional;
         final isNullable =
             paramType.nullabilitySuffix == NullabilitySuffix.question;
-        final isEnum = paramType is InterfaceType &&
+        final isEnum =
+            paramType is InterfaceType &&
             paramType.allSupertypes.any((e) => e.isDartCoreEnum);
         final isDateTime = typeName == 'DateTime';
-        final isMappable = paramType is InterfaceType &&
+        final isMappable =
+            paramType is InterfaceType &&
             paramType.allSupertypes.any(
               (e) => e.getDisplayString().contains('Mappable'),
             );
@@ -628,7 +633,8 @@ class RouteBuilder implements Builder {
         if (isListParam && paramType is InterfaceType) {
           final itemType = paramType.typeArguments.first;
           listItemType = itemType.getDisplayString();
-          listItemIsMappable = itemType is InterfaceType &&
+          listItemIsMappable =
+              itemType is InterfaceType &&
               itemType.allSupertypes.any(
                 (e) => e.getDisplayString().contains('Mappable'),
               );
@@ -651,9 +657,7 @@ class RouteBuilder implements Builder {
         buffer.writeln(
           "        'listItemTypeName': ${listItemType == null ? 'null' : "'$listItemType'"},",
         );
-        buffer.writeln(
-          "        'listItemIsMappable': $listItemIsMappable,",
-        );
+        buffer.writeln("        'listItemIsMappable': $listItemIsMappable,");
         buffer.writeln('      },');
       }
       buffer.writeln('    ],');

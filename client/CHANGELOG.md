@@ -1,3 +1,7 @@
+## 0.1.1+1
+
+ - **FIX**(client): Add example.
+
 ## 0.1.1
 
  - **FEAT**: initial release.

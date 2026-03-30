@@ -1,6 +1,6 @@
 name: vanestack_client
 description: HTTP client SDK for interacting with VaneStack backend servers.
-version: 0.1.1
+version: 0.1.1+1
 repository: https://github.com/vanestack/vanestack
 homepage: https://vanestack.dev
 resolution: workspace

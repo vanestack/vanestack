@@ -84,22 +84,28 @@ class _ListenerEntry {
   _ListenerEntry(this.listener, this.sessionId);
 }
 
+/// A wrapper class to transport realtime events.
 class Transport {
   final RealtimeEvent event;
 
   Transport({required this.event});
 }
 
+/// An extension of [Transport] for document-related events, providing direct access to the affected collection.
 class DocumentTransport extends Transport {
   final Collection collection;
 
   DocumentTransport({required super.event, required this.collection});
 }
 
+/// An extension of [Transport] for file-related events, providing direct access to the affected bucket and file.
 class FileTransport extends Transport {
   final Bucket bucket;
   final DbFile file;
 
-  FileTransport({required super.event, required this.bucket, required this.file});
+  FileTransport({
+    required super.event,
+    required this.bucket,
+    required this.file,
+  });
 }
-

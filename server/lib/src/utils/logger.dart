@@ -205,7 +205,7 @@ class Logger {
   }
 }
 
-/// Global loggers for common components
+// Global loggers for common components
 final serverLogger = Logger(LogSource.server);
 final authLogger = Logger(LogSource.auth);
 final usersLogger = Logger(LogSource.users);

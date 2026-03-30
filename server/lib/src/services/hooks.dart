@@ -15,6 +15,11 @@ class HookCancelledException extends VaneStackException {
 
 // ==================== Document Events ====================
 
+/// Fired before a document is created.
+///
+/// Fields are mutable — modify [data] or [collectionName] to alter
+/// what gets persisted.
+/// Return `false` from the hook callback to cancel the creation.
 class BeforeDocumentCreateEvent {
   String collectionName;
   Map<String, Object?> data;
@@ -22,6 +27,10 @@ class BeforeDocumentCreateEvent {
   BeforeDocumentCreateEvent({required this.collectionName, required this.data});
 }
 
+/// Fired after a document has been successfully created.
+///
+/// All fields are final — the document is already persisted.
+/// Use this for side-effects like sending notifications or logging.
 class AfterDocumentCreateEvent {
   final String collectionName;
   final Document result;
@@ -29,6 +38,11 @@ class AfterDocumentCreateEvent {
   AfterDocumentCreateEvent({required this.collectionName, required this.result});
 }
 
+/// Fired before a document is updated.
+///
+/// Fields are mutable — modify [data], [documentId], or [collectionName]
+/// to alter what gets persisted.
+/// Return `false` from the hook callback to cancel the update.
 class BeforeDocumentUpdateEvent {
   String collectionName;
   String documentId;
@@ -41,6 +55,10 @@ class BeforeDocumentUpdateEvent {
   });
 }
 
+/// Fired after a document has been successfully updated.
+///
+/// All fields are final — the document is already persisted.
+/// Use this for side-effects like cache invalidation or audit logging.
 class AfterDocumentUpdateEvent {
   final String collectionName;
   final Document result;
@@ -48,6 +66,10 @@ class AfterDocumentUpdateEvent {
   AfterDocumentUpdateEvent({required this.collectionName, required this.result});
 }
 
+/// Fired before a document is deleted.
+///
+/// Fields are mutable — modify [documentId] or [collectionName] if needed.
+/// Return `false` from the hook callback to cancel the deletion.
 class BeforeDocumentDeleteEvent {
   String collectionName;
   String documentId;
@@ -58,6 +80,10 @@ class BeforeDocumentDeleteEvent {
   });
 }
 
+/// Fired after a document has been successfully deleted.
+///
+/// All fields are final — the document has already been removed.
+/// Use this for cleanup tasks like deleting associated files.
 class AfterDocumentDeleteEvent {
   final String collectionName;
   final String documentId;
@@ -70,6 +96,11 @@ class AfterDocumentDeleteEvent {
 
 // ==================== Collection Events ====================
 
+/// Fired before a collection is created.
+///
+/// Fields are mutable — modify [name] or [attributes] to alter
+/// the collection definition before it is saved.
+/// Return `false` from the hook callback to cancel the creation.
 class BeforeCollectionCreateEvent {
   String name;
   List<Attribute> attributes;
@@ -77,30 +108,46 @@ class BeforeCollectionCreateEvent {
   BeforeCollectionCreateEvent({required this.name, required this.attributes});
 }
 
+/// Fired after a collection has been successfully created.
+///
+/// Use this for side-effects like setting up default documents
+/// or notifying external systems.
 class AfterCollectionCreateEvent {
   final Collection result;
 
   AfterCollectionCreateEvent({required this.result});
 }
 
+/// Fired before a collection is updated.
+///
+/// Fields are mutable — modify [name] to alter the update.
+/// Return `false` from the hook callback to cancel the update.
 class BeforeCollectionUpdateEvent {
   String name;
 
   BeforeCollectionUpdateEvent({required this.name});
 }
 
+/// Fired after a collection has been successfully updated.
 class AfterCollectionUpdateEvent {
   final Collection result;
 
   AfterCollectionUpdateEvent({required this.result});
 }
 
+/// Fired before a collection is deleted.
+///
+/// Fields are mutable — modify [name] if needed.
+/// Return `false` from the hook callback to cancel the deletion.
 class BeforeCollectionDeleteEvent {
   String name;
 
   BeforeCollectionDeleteEvent({required this.name});
 }
 
+/// Fired after a collection has been successfully deleted.
+///
+/// Use this for cleanup tasks like removing associated storage buckets.
 class AfterCollectionDeleteEvent {
   final String name;
 
@@ -109,6 +156,11 @@ class AfterCollectionDeleteEvent {
 
 // ==================== User Events ====================
 
+/// Fired before a user is created.
+///
+/// Fields are mutable — modify [email], [name], [password], or [superUser]
+/// to alter the user before creation.
+/// Return `false` from the hook callback to cancel the creation.
 class BeforeUserCreateEvent {
   String email;
   String? name;
@@ -123,12 +175,19 @@ class BeforeUserCreateEvent {
   });
 }
 
+/// Fired after a user has been successfully created.
+///
+/// Use this for side-effects like sending a welcome email.
 class AfterUserCreateEvent {
   final User result;
 
   AfterUserCreateEvent({required this.result});
 }
 
+/// Fired before a user is updated.
+///
+/// Fields are mutable — modify any field to alter the update.
+/// Return `false` from the hook callback to cancel the update.
 class BeforeUserUpdateEvent {
   String id;
   String? email;
@@ -145,18 +204,26 @@ class BeforeUserUpdateEvent {
   });
 }
 
+/// Fired after a user has been successfully updated.
 class AfterUserUpdateEvent {
   final User result;
 
   AfterUserUpdateEvent({required this.result});
 }
 
+/// Fired before a user is deleted.
+///
+/// Fields are mutable — modify [id] if needed.
+/// Return `false` from the hook callback to cancel the deletion.
 class BeforeUserDeleteEvent {
   String id;
 
   BeforeUserDeleteEvent({required this.id});
 }
 
+/// Fired after a user has been successfully deleted.
+///
+/// Use this for cleanup tasks like revoking sessions or deleting user data.
 class AfterUserDeleteEvent {
   final String id;
 
@@ -165,12 +232,19 @@ class AfterUserDeleteEvent {
 
 // ==================== Auth Events ====================
 
+/// Fired before a user signs in.
+///
+/// Fields are mutable — modify [email] to alter the sign-in lookup.
+/// Return `false` from the hook callback to block the sign-in attempt.
 class BeforeAuthSignInEvent {
   String email;
 
   BeforeAuthSignInEvent({required this.email});
 }
 
+/// Fired after a user has successfully signed in.
+///
+/// Use this for side-effects like audit logging or analytics.
 class AfterAuthSignInEvent {
   final AuthResponse result;
 
@@ -179,6 +253,11 @@ class AfterAuthSignInEvent {
 
 // ==================== File Events ====================
 
+/// Fired before a file is uploaded.
+///
+/// Fields are mutable — modify [bucket], [path], or [mimeType]
+/// to alter where or how the file is stored.
+/// Return `false` from the hook callback to cancel the upload.
 class BeforeFileUploadEvent {
   String bucket;
   String path;
@@ -191,18 +270,26 @@ class BeforeFileUploadEvent {
   });
 }
 
+/// Fired after a file has been successfully uploaded.
+///
+/// Use this for side-effects like generating thumbnails or indexing metadata.
 class AfterFileUploadEvent {
   final DbFile result;
 
   AfterFileUploadEvent({required this.result});
 }
 
+/// Fired before a file is deleted.
+///
+/// Fields are mutable — modify [fileId] if needed.
+/// Return `false` from the hook callback to cancel the deletion.
 class BeforeFileDeleteEvent {
   String fileId;
 
   BeforeFileDeleteEvent({required this.fileId});
 }
 
+/// Fired after a file has been successfully deleted.
 class AfterFileDeleteEvent {
   final String fileId;
 
@@ -211,6 +298,7 @@ class AfterFileDeleteEvent {
 
 // ==================== Server Lifecycle Events ====================
 
+/// Fired after the server has started and is accepting connections.
 class ServerStartedEvent {
   final String address;
   final int port;
@@ -218,6 +306,7 @@ class ServerStartedEvent {
   ServerStartedEvent({required this.address, required this.port});
 }
 
+/// Fired when the server is shutting down.
 class ServerStoppedEvent {
   ServerStoppedEvent();
 }
@@ -245,7 +334,20 @@ class HookRegistry {
   /// Returns `true` if the hook was found and removed.
   bool unregister(String id) => _executor.unregister(id);
 
-  // Documents
+  // ---- Documents ----
+
+  /// Registers a hook that runs before a document is created.
+  ///
+  /// The [callback] receives a [BeforeDocumentCreateEvent] with mutable
+  /// fields. Return `false` to cancel the creation and throw a
+  /// [HookCancelledException].
+  ///
+  /// ```dart
+  /// vanestack.hooks.onBeforeDocumentCreate((e) {
+  ///   e.data['slug'] = slugify(e.data['title']);
+  ///   return true;
+  /// });
+  /// ```
   String onBeforeDocumentCreate(
     FutureOr<bool> Function(BeforeDocumentCreateEvent) callback, {
     String? id,
@@ -255,6 +357,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a document is created.
+  ///
+  /// The [callback] receives an [AfterDocumentCreateEvent] with the
+  /// persisted [Document]. Use for side-effects like notifications.
   String onAfterDocumentCreate(
     FutureOr<void> Function(AfterDocumentCreateEvent) callback, {
     String? id,
@@ -264,6 +370,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs before a document is updated.
+  ///
+  /// The [callback] receives a [BeforeDocumentUpdateEvent] with mutable
+  /// fields. Return `false` to cancel the update.
   String onBeforeDocumentUpdate(
     FutureOr<bool> Function(BeforeDocumentUpdateEvent) callback, {
     String? id,
@@ -273,6 +383,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a document is updated.
+  ///
+  /// The [callback] receives an [AfterDocumentUpdateEvent] with the
+  /// updated [Document]. Use for side-effects like cache invalidation.
   String onAfterDocumentUpdate(
     FutureOr<void> Function(AfterDocumentUpdateEvent) callback, {
     String? id,
@@ -282,6 +396,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs before a document is deleted.
+  ///
+  /// The [callback] receives a [BeforeDocumentDeleteEvent]. Return `false`
+  /// to cancel the deletion.
   String onBeforeDocumentDelete(
     FutureOr<bool> Function(BeforeDocumentDeleteEvent) callback, {
     String? id,
@@ -291,6 +409,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a document is deleted.
+  ///
+  /// The [callback] receives an [AfterDocumentDeleteEvent]. Use for
+  /// cleanup tasks like deleting associated files.
   String onAfterDocumentDelete(
     FutureOr<void> Function(AfterDocumentDeleteEvent) callback, {
     String? id,
@@ -300,7 +422,12 @@ class HookRegistry {
     return resolved;
   }
 
-  // Collections
+  // ---- Collections ----
+
+  /// Registers a hook that runs before a collection is created.
+  ///
+  /// The [callback] receives a [BeforeCollectionCreateEvent] with mutable
+  /// fields. Return `false` to cancel the creation.
   String onBeforeCollectionCreate(
     FutureOr<bool> Function(BeforeCollectionCreateEvent) callback, {
     String? id,
@@ -310,6 +437,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a collection is created.
+  ///
+  /// The [callback] receives an [AfterCollectionCreateEvent] with the
+  /// persisted [Collection].
   String onAfterCollectionCreate(
     FutureOr<void> Function(AfterCollectionCreateEvent) callback, {
     String? id,
@@ -319,6 +450,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs before a collection is updated.
+  ///
+  /// The [callback] receives a [BeforeCollectionUpdateEvent] with mutable
+  /// fields. Return `false` to cancel the update.
   String onBeforeCollectionUpdate(
     FutureOr<bool> Function(BeforeCollectionUpdateEvent) callback, {
     String? id,
@@ -328,6 +463,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a collection is updated.
+  ///
+  /// The [callback] receives an [AfterCollectionUpdateEvent] with the
+  /// updated [Collection].
   String onAfterCollectionUpdate(
     FutureOr<void> Function(AfterCollectionUpdateEvent) callback, {
     String? id,
@@ -337,6 +476,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs before a collection is deleted.
+  ///
+  /// The [callback] receives a [BeforeCollectionDeleteEvent]. Return `false`
+  /// to cancel the deletion.
   String onBeforeCollectionDelete(
     FutureOr<bool> Function(BeforeCollectionDeleteEvent) callback, {
     String? id,
@@ -346,6 +489,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a collection is deleted.
+  ///
+  /// The [callback] receives an [AfterCollectionDeleteEvent] with the
+  /// deleted collection's name.
   String onAfterCollectionDelete(
     FutureOr<void> Function(AfterCollectionDeleteEvent) callback, {
     String? id,
@@ -355,7 +502,12 @@ class HookRegistry {
     return resolved;
   }
 
-  // Users
+  // ---- Users ----
+
+  /// Registers a hook that runs before a user is created.
+  ///
+  /// The [callback] receives a [BeforeUserCreateEvent] with mutable
+  /// fields. Return `false` to cancel the creation.
   String onBeforeUserCreate(
     FutureOr<bool> Function(BeforeUserCreateEvent) callback, {
     String? id,
@@ -365,6 +517,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a user is created.
+  ///
+  /// The [callback] receives an [AfterUserCreateEvent] with the
+  /// persisted [User]. Use for side-effects like sending a welcome email.
   String onAfterUserCreate(
     FutureOr<void> Function(AfterUserCreateEvent) callback, {
     String? id,
@@ -374,6 +530,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs before a user is updated.
+  ///
+  /// The [callback] receives a [BeforeUserUpdateEvent] with mutable
+  /// fields. Return `false` to cancel the update.
   String onBeforeUserUpdate(
     FutureOr<bool> Function(BeforeUserUpdateEvent) callback, {
     String? id,
@@ -383,6 +543,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a user is updated.
+  ///
+  /// The [callback] receives an [AfterUserUpdateEvent] with the
+  /// updated [User].
   String onAfterUserUpdate(
     FutureOr<void> Function(AfterUserUpdateEvent) callback, {
     String? id,
@@ -392,6 +556,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs before a user is deleted.
+  ///
+  /// The [callback] receives a [BeforeUserDeleteEvent]. Return `false`
+  /// to cancel the deletion.
   String onBeforeUserDelete(
     FutureOr<bool> Function(BeforeUserDeleteEvent) callback, {
     String? id,
@@ -401,6 +569,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a user is deleted.
+  ///
+  /// The [callback] receives an [AfterUserDeleteEvent]. Use for cleanup
+  /// tasks like revoking sessions or deleting user data.
   String onAfterUserDelete(
     FutureOr<void> Function(AfterUserDeleteEvent) callback, {
     String? id,
@@ -410,7 +582,12 @@ class HookRegistry {
     return resolved;
   }
 
-  // Auth
+  // ---- Auth ----
+
+  /// Registers a hook that runs before a user signs in.
+  ///
+  /// The [callback] receives a [BeforeAuthSignInEvent] with mutable
+  /// fields. Return `false` to block the sign-in attempt.
   String onBeforeAuthSignIn(
     FutureOr<bool> Function(BeforeAuthSignInEvent) callback, {
     String? id,
@@ -420,6 +597,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a user signs in.
+  ///
+  /// The [callback] receives an [AfterAuthSignInEvent] with the
+  /// [AuthResponse]. Use for audit logging or analytics.
   String onAfterAuthSignIn(
     FutureOr<void> Function(AfterAuthSignInEvent) callback, {
     String? id,
@@ -429,7 +610,12 @@ class HookRegistry {
     return resolved;
   }
 
-  // Server lifecycle
+  // ---- Server lifecycle ----
+
+  /// Registers a hook that runs after the server starts.
+  ///
+  /// The [callback] receives a [ServerStartedEvent] with the server's
+  /// [address] and [port].
   String onServerStarted(
     FutureOr<void> Function(ServerStartedEvent) callback, {
     String? id,
@@ -439,6 +625,9 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs when the server is shutting down.
+  ///
+  /// Use for cleanup tasks like closing external connections.
   String onServerStopped(
     FutureOr<void> Function(ServerStoppedEvent) callback, {
     String? id,
@@ -448,7 +637,12 @@ class HookRegistry {
     return resolved;
   }
 
-  // Files
+  // ---- Files ----
+
+  /// Registers a hook that runs before a file is uploaded.
+  ///
+  /// The [callback] receives a [BeforeFileUploadEvent] with mutable
+  /// fields. Return `false` to cancel the upload.
   String onBeforeFileUpload(
     FutureOr<bool> Function(BeforeFileUploadEvent) callback, {
     String? id,
@@ -458,6 +652,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a file is uploaded.
+  ///
+  /// The [callback] receives an [AfterFileUploadEvent] with the
+  /// persisted [DbFile]. Use for side-effects like generating thumbnails.
   String onAfterFileUpload(
     FutureOr<void> Function(AfterFileUploadEvent) callback, {
     String? id,
@@ -467,6 +665,10 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs before a file is deleted.
+  ///
+  /// The [callback] receives a [BeforeFileDeleteEvent]. Return `false`
+  /// to cancel the deletion.
   String onBeforeFileDelete(
     FutureOr<bool> Function(BeforeFileDeleteEvent) callback, {
     String? id,
@@ -476,6 +678,7 @@ class HookRegistry {
     return resolved;
   }
 
+  /// Registers a hook that runs after a file is deleted.
   String onAfterFileDelete(
     FutureOr<void> Function(AfterFileDeleteEvent) callback, {
     String? id,

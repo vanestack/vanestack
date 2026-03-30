@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:args/command_runner.dart';
 import 'package:shelf/shelf.dart';
 
-import '../utils/http_method.dart';
 import '../routes_info.dart';
+import '../utils/http_method.dart';
 
 class GenerateClientCommand extends Command {
   @override

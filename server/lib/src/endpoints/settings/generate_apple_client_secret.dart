@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:shelf/shelf.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
 
-import '../../../tools/route.dart';
 import '../../utils/extensions.dart';
-import '../../utils/http_method.dart';
 
 @Route(
   path: '/v1/settings/generate-apple-client-secret',

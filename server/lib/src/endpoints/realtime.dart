@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:vanestack_common/vanestack_common.dart';
 import 'package:shelf/shelf.dart';
 
-import '../../tools/route.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
 import '../../src/utils/extensions.dart';
-import '../../src/utils/http_method.dart';
+
 import '../permissions/rules_engine.dart';
 import '../realtime/realtime.dart';
 
@@ -142,10 +142,7 @@ Stream<RealtimeEvent> subscribe(
             }
 
             // non-empty rule = evaluate
-            final engine = RulesEngine(
-              context: 'realtime',
-              request: request,
-            );
+            final engine = RulesEngine(context: 'realtime', request: request);
 
             final approved = await engine.evaluate(rule);
             if (approved && !paused) {

@@ -6,10 +6,10 @@ import 'package:shelf/shelf.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../permissions/rules_engine.dart';
-import '../../../tools/route.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
 import '../../utils/collection_data.dart';
 import '../../utils/extensions.dart';
-import '../../utils/http_method.dart';
+
 import '../../utils/logger.dart';
 
 @Route(path: '/v1/documents/<collectionName>', method: HttpMethod.post)

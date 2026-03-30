@@ -5,10 +5,9 @@ import 'package:vanestack_common/vanestack_common.dart';
 import 'package:shelf/shelf.dart';
 
 import '../../permissions/rules_engine.dart';
-import '../../../tools/route.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
 import '../../utils/collection_data.dart';
 import '../../utils/extensions.dart';
-import '../../utils/http_method.dart';
 
 @Route(
   path: '/v1/documents/<collectionName>/<documentId>',
@@ -36,7 +35,10 @@ FutureOr<Document> get(
       .getSingleOrNull();
 
   if (collectionData == null) {
-    throw VaneStackException('Collection not found.', status: HttpStatus.notFound);
+    throw VaneStackException(
+      'Collection not found.',
+      status: HttpStatus.notFound,
+    );
   }
 
   final collection = collectionData.toModel();
@@ -48,7 +50,10 @@ FutureOr<Document> get(
   );
 
   if (document == null) {
-    throw VaneStackException('Document not found.', status: HttpStatus.notFound);
+    throw VaneStackException(
+      'Document not found.',
+      status: HttpStatus.notFound,
+    );
   }
 
   // Permission check
@@ -56,14 +61,20 @@ FutureOr<Document> get(
 
   if (viewRule == null) {
     if (!request.isSuperUser) {
-      throw VaneStackException('Permission denied.', status: HttpStatus.forbidden);
+      throw VaneStackException(
+        'Permission denied.',
+        status: HttpStatus.forbidden,
+      );
     }
   } else if (viewRule.trim().isNotEmpty && !request.isSuperUser) {
     final engine = RulesEngine(request: request, oldResource: document);
 
     final approved = await engine.evaluate(viewRule);
     if (!approved) {
-      throw VaneStackException('Permission denied.', status: HttpStatus.forbidden);
+      throw VaneStackException(
+        'Permission denied.',
+        status: HttpStatus.forbidden,
+      );
     }
   }
 

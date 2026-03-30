@@ -10,9 +10,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../../database/database.dart';
 import '../../../permissions/rules_engine.dart';
-import '../../../../tools/route.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
 import '../../../utils/extensions.dart';
-import '../../../utils/http_method.dart';
 
 @Route(path: '/v1/files/<bucket>/upload', method: HttpMethod.post)
 FutureOr<File> upload(Request request, String bucket) async {
@@ -42,21 +41,33 @@ FutureOr<File> upload(Request request, String bucket) async {
             .getSingleOrNull();
 
     if (bucketEntity == null) {
-      throw VaneStackException('Bucket not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'Bucket not found.',
+        status: HttpStatus.notFound,
+      );
     }
 
     if (file == null) {
-      throw VaneStackException('File is required.', status: HttpStatus.badRequest);
+      throw VaneStackException(
+        'File is required.',
+        status: HttpStatus.badRequest,
+      );
     }
 
     if (uploadPath == null) {
-      throw VaneStackException('Path is required.', status: HttpStatus.badRequest);
+      throw VaneStackException(
+        'Path is required.',
+        status: HttpStatus.badRequest,
+      );
     }
 
     final safePath = normalize(uploadPath);
 
     if (safePath.isEmpty) {
-      throw VaneStackException('Path is required.', status: HttpStatus.badRequest);
+      throw VaneStackException(
+        'Path is required.',
+        status: HttpStatus.badRequest,
+      );
     }
 
     if (isAbsolute(safePath) ||

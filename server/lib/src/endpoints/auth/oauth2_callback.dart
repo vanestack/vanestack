@@ -2,12 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:vanestack_common/vanestack_common.dart';
 import 'package:shelf/shelf.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
+import 'package:vanestack_common/vanestack_common.dart';
 
-import '../../../tools/route.dart';
 import '../../utils/extensions.dart';
-import '../../utils/http_method.dart';
 import '../../utils/logger.dart';
 
 /// GET callback for most OAuth providers

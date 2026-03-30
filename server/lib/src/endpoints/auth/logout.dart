@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:vanestack_annotation/vanestack_annotation.dart';
 import 'package:vanestack_common/vanestack_common.dart';
 import 'package:shelf/shelf.dart';
 
-import '../../../tools/route.dart';
 import '../../utils/extensions.dart';
-import '../../utils/http_method.dart';
 
 @Route(path: '/v1/auth/logout', method: HttpMethod.delete, requireAuth: true)
 FutureOr<void> logout(Request request) async {
@@ -19,8 +18,5 @@ FutureOr<void> logout(Request request) async {
     );
   }
 
-  return request.auth.logout(
-    accessToken: accessToken,
-    userId: request.userId,
-  );
+  return request.auth.logout(accessToken: accessToken, userId: request.userId);
 }

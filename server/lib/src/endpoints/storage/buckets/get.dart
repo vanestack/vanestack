@@ -4,9 +4,8 @@ import 'dart:io';
 import 'package:vanestack_common/vanestack_common.dart';
 import 'package:shelf/shelf.dart';
 
-import '../../../../tools/route.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
 import '../../../utils/extensions.dart';
-import '../../../utils/http_method.dart';
 
 @Route(
   path: '/v1/buckets/<bucket>',

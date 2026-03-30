@@ -6,9 +6,8 @@ import 'package:drift/drift.dart';
 import 'package:shelf/shelf.dart';
 
 import '../../../permissions/rules_engine.dart';
-import '../../../../tools/route.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
 import '../../../utils/extensions.dart';
-import '../../../utils/http_method.dart';
 
 @Route(path: '/v1/files/<bucket>/<fileId>', method: HttpMethod.patch)
 FutureOr<File> move(
@@ -38,14 +37,20 @@ FutureOr<File> move(
   final updateRule = bucketEntity.updateRule;
   if (updateRule == null) {
     if (!request.isSuperUser) {
-      throw VaneStackException('Permission denied.', status: HttpStatus.forbidden);
+      throw VaneStackException(
+        'Permission denied.',
+        status: HttpStatus.forbidden,
+      );
     }
   } else if (updateRule.trim().isNotEmpty && !request.isSuperUser) {
     final engine = RulesEngine(request: request, oldResource: file);
 
     final approved = await engine.evaluate(updateRule);
     if (!approved) {
-      throw VaneStackException('Permission denied.', status: HttpStatus.forbidden);
+      throw VaneStackException(
+        'Permission denied.',
+        status: HttpStatus.forbidden,
+      );
     }
   }
 

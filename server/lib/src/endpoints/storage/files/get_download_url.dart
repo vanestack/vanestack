@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:vanestack_common/vanestack_common.dart';
 import 'package:shelf/shelf.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
+import 'package:vanestack_common/vanestack_common.dart';
 
 import '../../../permissions/rules_engine.dart';
-import '../../../../tools/route.dart';
 import '../../../utils/extensions.dart';
-import '../../../utils/http_method.dart';
 
 @Route(path: '/v1/files/<bucket>/<fileId>/url', method: HttpMethod.get)
 FutureOr<GetDownloadUrlResult> getDownloadUrl(
@@ -31,17 +30,23 @@ FutureOr<GetDownloadUrlResult> getDownloadUrl(
 
   // Permission check
   final viewRule = bucketEntity.viewRule;
- 
+
   if (viewRule == null) {
     if (!request.isSuperUser) {
-      throw VaneStackException('Permission denied.', status: HttpStatus.forbidden);
+      throw VaneStackException(
+        'Permission denied.',
+        status: HttpStatus.forbidden,
+      );
     }
   } else if (viewRule.trim().isNotEmpty && !request.isSuperUser) {
     final engine = RulesEngine(request: request, oldResource: file);
 
     final approved = await engine.evaluate(viewRule);
     if (!approved) {
-      throw VaneStackException('Permission denied.', status: HttpStatus.forbidden);
+      throw VaneStackException(
+        'Permission denied.',
+        status: HttpStatus.forbidden,
+      );
     }
   }
 

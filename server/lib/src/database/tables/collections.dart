@@ -1,5 +1,5 @@
-import 'package:vanestack_common/vanestack_common.dart';
 import 'package:drift/drift.dart' hide Index;
+import 'package:vanestack_common/vanestack_common.dart';
 
 @DataClassName('CollectionData')
 class Collections extends Table {

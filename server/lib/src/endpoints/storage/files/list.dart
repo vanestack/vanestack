@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:vanestack_common/vanestack_common.dart';
 import 'package:shelf/shelf.dart';
+import 'package:vanestack_annotation/vanestack_annotation.dart';
+import 'package:vanestack_common/vanestack_common.dart';
 
 import '../../../permissions/rules_engine.dart';
-import '../../../../tools/route.dart';
 import '../../../utils/extensions.dart';
-import '../../../utils/http_method.dart';
 
 @Route(path: '/v1/files/<bucket>', method: HttpMethod.get)
 FutureOr<ListFilesResult> list(
@@ -51,7 +50,6 @@ FutureOr<ListFilesResult> list(
     ]);
 
     if (checks.contains(false)) {
-      
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,

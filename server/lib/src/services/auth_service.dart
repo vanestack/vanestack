@@ -393,6 +393,7 @@ class AuthService {
       throw VaneStackException(
         'Missing refresh token.',
         status: HttpStatus.badRequest,
+        code: ErrorCode.missingRefreshToken,
       );
     }
 
@@ -406,6 +407,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid refresh token.',
         status: HttpStatus.badRequest,
+        code: ErrorCode.invalidRefreshToken,
       );
     }
 
@@ -417,6 +419,7 @@ class AuthService {
       throw VaneStackException(
         'Refresh token expired.',
         status: HttpStatus.badRequest,
+        code: ErrorCode.expiredRefreshToken,
       );
     }
 
@@ -429,7 +432,11 @@ class AuthService {
         'Token refresh failed: user not found',
         userId: tokenRecord.userId,
       );
-      throw VaneStackException('User not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'User not found.',
+        status: HttpStatus.notFound,
+        code: ErrorCode.userNotFound,
+      );
     }
 
     final newAccessToken = AuthUtils.generateJwt(

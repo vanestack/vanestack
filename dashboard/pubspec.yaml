@@ -12,10 +12,8 @@ dependencies:
   jaspr_riverpod: ^0.4.2
   jaspr_router: ^0.8.1
   universal_web: ^1.1.1+1
-  vanestack_client:
-    path: ../client
-  vanestack_common:
-    path: ../common
+  vanestack_client: ^0.1.1+1
+  vanestack_common: ^0.1.1
   collection: ^1.19.1
   path: ^1.9.1
   uuid: ^4.5.2

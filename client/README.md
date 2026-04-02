@@ -1,125 +1,150 @@
-<p align="center">
-  <a href="https://vanestack.dev">
-    <img src="https://vanestack.dev/images/vanestack_logo.png" alt="VaneStack Logo" width="80" />
-  </a>
-</p>
+<!-- GENERATED CODE - DO NOT MODIFY BY HAND -->
 
-<h1 align="center">vanestack_client</h1>
+# vanestack_client
 
-<p align="center">
-  Typed HTTP client SDK for <a href="https://pub.dev/packages/vanestack">VaneStack</a> servers.
-</p>
+Auto-generated typed HTTP client SDK for VaneStack. Provides a complete Dart API for all server endpoints with built-in auth management and realtime subscriptions.
 
-<p align="center">
-  <a href="https://vanestack.dev">Website</a> · <a href="https://vanestack.dev/docs">Documentation</a>
-</p>
+**This package is generated** — do not edit manually. Regenerate with:
 
----
+```bash
+cd server
+dart run bin/vanestack.dart generate
+```
 
-## Getting Started
+## Usage
 
 ```dart
 import 'package:vanestack_client/vanestack_client.dart';
 
 final client = VaneStackClient(
-  baseUrl: 'http://localhost:8080',
+  baseUrl: 'http://localhost:8090',
   authStorage: MemoryAuthStorage(),
 );
 await client.initialize();
 ```
 
-## Authentication
+## API
 
-```dart
-// Sign in
-final auth = await client.auth.signInWithEmailAndPassword(
-  email: 'user@example.com',
-  password: 'password',
-);
-print(auth.user.email);
+### `client.auth`
 
-// Listen to auth state changes
-client.onUserChanges.listen((user) {
-  print('Auth state changed: ${user?.email}');
-});
+| Method | Path | Function |
+|--------|------|----------|
+| `POST` | `/v1/auth/forgot-password` | `auth.sendPasswordResetEmail()` |
+| `DELETE` | `/v1/auth/logout` | `auth.logout()` |
+| `GET` | `/v1/auth/refresh` | `auth.refresh()` |
+| `POST` | `/v1/auth/reset-password` | `auth.resetPassword()` |
+| `POST` | `/v1/auth/sign-in-email-password` | `auth.signInWithEmailAndPassword()` |
+| `POST` | `/v1/auth/sign-in-with-id-token` | `auth.signInWithIdToken()` |
+| `POST` | `/v1/auth/sign-in-with-otp` | `auth.signInWithOtp()` |
+| `GET` | `/v1/auth/user` | `auth.user()` |
+| `POST` | `/v1/auth/verify-otp` | `auth.verifyOtp()` |
+| `POST` | `/v1/auth/oauth2/<provider>` | `auth.oauth2()` |
 
-// Sign out
-await client.auth.logout();
-```
+### `client.buckets`
 
-## Documents
+| Method | Path | Function |
+|--------|------|----------|
+| `GET` | `/v1/buckets` | `buckets.list()` |
+| `POST` | `/v1/buckets/<bucket>` | `buckets.create()` |
+| `DELETE` | `/v1/buckets/<bucket>` | `buckets.delete()` |
+| `GET` | `/v1/buckets/<bucket>` | `buckets.get()` |
+| `PATCH` | `/v1/buckets/<bucket>` | `buckets.update()` |
 
-```dart
-// Create
-final doc = await client.documents.create(
-  collectionName: 'posts',
-  data: {'title': 'Hello World', 'published': true},
-);
+### `client.collections`
 
-// Read
-final post = await client.documents.get(
-  collectionName: 'posts',
-  documentId: doc.id,
-);
+| Method | Path | Function |
+|--------|------|----------|
+| `POST` | `/v1/collections` | `collections.create()` |
+| `GET` | `/v1/collections` | `collections.list()` |
+| `GET` | `/v1/collections/export` | `collections.export()` |
+| `POST` | `/v1/collections/import` | `collections.import()` |
+| `GET` | `/v1/collections/<collectionName>` | `collections.get()` |
+| `DELETE` | `/v1/collections/<collectionName>` | `collections.delete()` |
+| `PATCH` | `/v1/collections/<collectionName>` | `collections.update()` |
+| `POST` | `/v1/collections/<collectionName>/generate` | `collections.generate()` |
 
-// List with filtering and sorting
-final result = await client.documents.list(
-  collectionName: 'posts',
-  filter: Filter.and([
-    Filter.where('published', isEqualTo: true),
-    Filter.where('views', isGreaterThan: 100),
-  ]),
-  orderBy: OrderBy('createdAt', direction: SortDirection.desc),
-);
+### `client.logs`
 
-// Update
-await client.documents.update(
-  collectionName: 'posts',
-  documentId: doc.id,
-  data: {'title': 'Updated Title'},
-);
+| Method | Path | Function |
+|--------|------|----------|
+| `GET` | `/v1/logs` | `logs.list()` |
 
-// Delete
-await client.documents.delete(
-  collectionName: 'posts',
-  documentId: doc.id,
-);
-```
+### `client.realtime`
 
-## File Storage
+| Method | Path | Function |
+|--------|------|----------|
+| `GET` | `/v1/realtime` | `realtime.subscribe()` |
 
-```dart
-// Upload
-await client.files.upload(
-  bucket: 'images',
-  file: MultipartFile.fromPath('photo', '/path/to/image.png'),
-);
+### `client.settings`
 
-// Get download URL
-final url = await client.files.getDownloadUrl(
-  bucket: 'images',
-  fileId: 'file-id',
-);
-```
+| Method | Path | Function |
+|--------|------|----------|
+| `GET` | `/v1/settings` | `settings.get()` |
+| `PATCH` | `/v1/settings` | `settings.update()` |
+| `POST` | `/v1/settings/generate-apple-client-secret` | `settings.generateAppleClientSecret()` |
+| `GET` | `/v1/settings/s3` | `settings.testS3Connection()` |
 
-## Realtime
+### `client.stats`
+
+| Method | Path | Function |
+|--------|------|----------|
+| `GET` | `/v1/stats` | `stats.stats()` |
+
+### `client.users`
+
+| Method | Path | Function |
+|--------|------|----------|
+| `GET` | `/v1/users` | `users.list()` |
+| `POST` | `/v1/users` | `users.create()` |
+| `DELETE` | `/v1/users/<userId>` | `users.delete()` |
+| `GET` | `/v1/users/<userId>` | `users.get()` |
+| `PATCH` | `/v1/users/<userId>` | `users.update()` |
+
+### `client.documents`
+
+| Method | Path | Function |
+|--------|------|----------|
+| `GET` | `/v1/documents/<collectionName>` | `documents.list()` |
+| `POST` | `/v1/documents/<collectionName>` | `documents.create()` |
+| `GET` | `/v1/documents/<collectionName>/<documentId>` | `documents.get()` |
+| `DELETE` | `/v1/documents/<collectionName>/<documentId>` | `documents.delete()` |
+| `PATCH` | `/v1/documents/<collectionName>/<documentId>` | `documents.update()` |
+
+### `client.files`
+
+| Method | Path | Function |
+|--------|------|----------|
+| `GET` | `/v1/files/<bucket>` | `files.list()` |
+| `DELETE` | `/v1/files/<bucket>` | `files.delete()` |
+| `PATCH` | `/v1/files/<bucket>/<fileId>` | `files.move()` |
+| `GET` | `/v1/files/<bucket>/<fileId>` | `files.download()` |
+| `GET` | `/v1/files/<bucket>/<fileId>/url` | `files.getDownloadUrl()` |
+| `POST` | `/v1/files/<bucket>/upload` | `files.upload()` |
+
+### `client.realtime`
 
 ```dart
 final (stream, unsubscribe) = await client.realtime.subscribe(
   channel: Channel.collection('posts', type: DocumentEventType.create),
 );
+stream.listen((event) => print(event));
+unsubscribe(); // when done
+```
 
-stream.listen((event) {
-  print('New post created: ${event.data}');
-});
+## Filtering & Sorting
 
-// When done
-unsubscribe();
+```dart
+final filter = Filter.and([
+  Filter.where('status', isEqualTo: 'published'),
+  Filter.where('views', isGreaterThan: 100),
+]);
+
+final orderBy = OrderBy('createdAt', direction: SortDirection.desc);
 ```
 
 ## Auth Storage
 
-Implement `AuthStorage` for persistent token storage (e.g. with `shared_preferences`):
+Implement `AuthStorage` for persistent token storage:
 
 ```dart
 abstract class AuthStorage {
@@ -129,7 +154,7 @@ abstract class AuthStorage {
 }
 ```
 
-`MemoryAuthStorage` is included for testing and non-persistent use.
+`MemoryAuthStorage` is included for testing/non-persistent use.
 
 ## Features
 
@@ -138,13 +163,3 @@ abstract class AuthStorage {
 - SSE-based realtime subscriptions with channel filtering
 - User state stream via `client.onUserChanges`
 - Multipart file uploads
-- Typed filter and sort builders
-
-## Related Packages
-
-| Package | Description |
-|---------|-------------|
-| [vanestack](https://pub.dev/packages/vanestack) | Server framework |
-| [vanestack_common](https://pub.dev/packages/vanestack_common) | Shared models and types |
-| [vanestack_annotation](https://pub.dev/packages/vanestack_annotation) | `@Route` annotation and `HttpMethod` enum |
-| [vanestack_generator](https://pub.dev/packages/vanestack_generator) | Build runner code generator |

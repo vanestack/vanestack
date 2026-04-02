@@ -1190,9 +1190,27 @@ class _RealtimeRoutes {
       buffer.writeln(
         '    final result = response.body.isNotEmpty ? response.body : null;',
       );
-      buffer.writeln(
-        "    if (response.statusCode < 200 || response.statusCode >= 300) { throw VaneStackException.fromJson(response.statusCode, result); }",
-      );
+
+      if (fnName == 'refresh') {
+        buffer.writeln(
+          "    if (response.statusCode < 200 || response.statusCode >= 300) {",
+        );
+        buffer.writeln(
+          "      final exception = VaneStackException.fromJson(response.statusCode, result);",
+        );
+        buffer.writeln(
+          "      const sessionDeadCodes = {ErrorCode.missingRefreshToken, ErrorCode.invalidRefreshToken, ErrorCode.expiredRefreshToken, ErrorCode.userNotFound};",
+        );
+        buffer.writeln(
+          "      if (sessionDeadCodes.contains(exception.code)) await _vanestack._clearAuthData();",
+        );
+        buffer.writeln("      throw exception;");
+        buffer.writeln("    }");
+      } else {
+        buffer.writeln(
+          "    if (response.statusCode < 200 || response.statusCode >= 300) { throw VaneStackException.fromJson(response.statusCode, result); }",
+        );
+      }
 
       if (fnName == 'logout') {
         buffer.writeln('    await _vanestack._clearAuthData();');

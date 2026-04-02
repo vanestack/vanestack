@@ -275,7 +275,19 @@ class _AuthRoutes {
     );
     final result = response.body.isNotEmpty ? response.body : null;
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw VaneStackException.fromJson(response.statusCode, result);
+      final exception = VaneStackException.fromJson(
+        response.statusCode,
+        result,
+      );
+      const sessionDeadCodes = {
+        ErrorCode.missingRefreshToken,
+        ErrorCode.invalidRefreshToken,
+        ErrorCode.expiredRefreshToken,
+        ErrorCode.userNotFound,
+      };
+      if (sessionDeadCodes.contains(exception.code))
+        await _vanestack._clearAuthData();
+      throw exception;
     }
     if (result == null) {
       throw VaneStackException('Empty response body', status: 400);

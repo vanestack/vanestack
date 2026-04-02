@@ -12,7 +12,11 @@ FutureOr<User> get(Request request, String userId) async {
   final user = await request.users.getById(userId);
 
   if (user == null) {
-    throw VaneStackException('User not found.', status: HttpStatus.notFound);
+    throw VaneStackException(
+      'User not found.',
+      status: HttpStatus.notFound,
+      code: ErrorCode.userNotFound,
+    );
   }
 
   return user;

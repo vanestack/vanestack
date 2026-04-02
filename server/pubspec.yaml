@@ -1,6 +1,6 @@
 name: vanestack
 description: A Dart backend framework with built-in auth, database, realtime, and admin dashboard.
-version: 0.1.1+2
+version: 0.1.2
 repository: https://github.com/vanestack/vanestack
 homepage: https://vanestack.dev
 resolution: workspace
@@ -29,14 +29,14 @@ dependencies:
   sqlite3: ^2.9.4
   uuid: ^4.5.1
   vanestack_annotation: ^0.1.1+1
-  vanestack_common: ^0.1.1
+  vanestack_common: ^0.1.2
   args: ^2.7.0
   hotreloader: ^4.3.0
   shelf_proxy: ^1.0.4
   http: ^1.5.0
   mailer: ^7.1.0
   expressions: ^0.2.5+3
-  vanestack_client: ^0.1.1+1
+  vanestack_client: ^0.1.2
   intl: ^0.20.2
   mustache_template: ^2.0.2
   shelf_multipart: ^2.0.1
@@ -47,7 +47,7 @@ dependencies:
 dev_dependencies:
   build_runner: ^2.10.2
   drift_dev: ">=2.30.0 <2.32.0"
-  vanestack_generator: ^0.1.1+1
+  vanestack_generator: ^0.1.1+2
   lints: ^6.0.0
   test: ^1.31.0
 

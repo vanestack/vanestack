@@ -1,3 +1,7 @@
+## 0.1.1+2
+
+ - **DOCS**: remove hardcoded versions from README install instructions.
+
 ## 0.1.1+1
 
  - **FIX**(generator): Add dart docs.

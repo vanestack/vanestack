@@ -14,6 +14,7 @@ import 'middleware/decode_jwt.dart';
 import 'middleware/inject.dart';
 import 'middleware/pretty_logger.dart';
 import 'middleware/rate_limit.dart';
+import 'middleware/security_headers.dart';
 import 'realtime/realtime.dart';
 import 'routes.dart';
 import 'services/context.dart';
@@ -104,6 +105,7 @@ class VaneStackServer {
           }),
         )
         .addMiddleware(cors())
+        .addMiddleware(securityHeaders())
         .addMiddleware(prettyLogger())
         .addMiddleware(rateLimit())
         .addMiddleware(decodeJwt())

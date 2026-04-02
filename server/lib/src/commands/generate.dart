@@ -1199,7 +1199,7 @@ class _RealtimeRoutes {
           "      final exception = VaneStackException.fromJson(response.statusCode, result);",
         );
         buffer.writeln(
-          "      const sessionDeadCodes = {ErrorCode.missingRefreshToken, ErrorCode.invalidRefreshToken, ErrorCode.expiredRefreshToken, ErrorCode.userNotFound};",
+          "      const sessionDeadCodes = {AuthErrorCode.missingRefreshToken, AuthErrorCode.invalidRefreshToken, AuthErrorCode.expiredRefreshToken, AuthErrorCode.userNotFound};",
         );
         buffer.writeln(
           "      if (sessionDeadCodes.contains(exception.code)) await _vanestack._clearAuthData();",
@@ -1218,7 +1218,7 @@ class _RealtimeRoutes {
 
       if (!isVoid) {
         buffer.writeln(
-          "    if (result == null) {throw VaneStackException('Empty response body', status:400);}",
+          "    if (result == null) {throw VaneStackException('Empty response body', status: 400, code: ClientErrorCode.emptyResponseBody);}",
         );
         if (isList && listItemTypeName != null) {
           buffer.writeln(

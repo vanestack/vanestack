@@ -132,6 +132,7 @@ extension ServicesX on Request {
       throw VaneStackException(
         'Application settings not found.',
         status: HttpStatus.internalServerError,
+        code: StorageErrorCode.settingsNotFound,
       );
     }
 
@@ -153,6 +154,7 @@ extension ServicesX on Request {
       throw VaneStackException(
         'Mailer is not configured.',
         status: HttpStatus.internalServerError,
+        code: SettingsErrorCode.mailerNotConfigured,
       );
     }
 
@@ -189,6 +191,7 @@ extension ServicesX on Request {
       throw VaneStackException(
         'Local storage is disabled and S3 is not configured.',
         status: HttpStatus.serviceUnavailable,
+        code: StorageErrorCode.storageNotConfigured,
       );
     }
 
@@ -198,12 +201,8 @@ extension ServicesX on Request {
   HookExecutor? get hooks => context['hooks'] as HookExecutor?;
 
   /// Creates a ServiceContext from the request context.
-  ServiceContext get serviceContext => (
-        database: database,
-        env: env,
-        realtime: realtime,
-        hooks: hooks,
-      );
+  ServiceContext get serviceContext =>
+      (database: database, env: env, realtime: realtime, hooks: hooks);
 
   /// Access the UsersService.
   UsersService get users => UsersService(serviceContext);

@@ -19,13 +19,13 @@ FutureOr<GetDownloadUrlResult> getDownloadUrl(
   final bucketEntity = await request.storageService.getBucket(bucket);
 
   if (bucketEntity == null) {
-    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound);
+    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound, code: StorageErrorCode.bucketNotFound);
   }
 
   final file = await request.storageService.getFileById(fileId);
 
   if (file == null || file.bucket != bucket) {
-    throw VaneStackException('File not found.', status: HttpStatus.notFound);
+    throw VaneStackException('File not found.', status: HttpStatus.notFound, code: StorageErrorCode.fileNotFound);
   }
 
   // Permission check
@@ -36,6 +36,7 @@ FutureOr<GetDownloadUrlResult> getDownloadUrl(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   } else if (viewRule.trim().isNotEmpty && !request.isSuperUser) {
@@ -46,6 +47,7 @@ FutureOr<GetDownloadUrlResult> getDownloadUrl(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   }

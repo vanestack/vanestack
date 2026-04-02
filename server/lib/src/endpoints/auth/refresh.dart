@@ -15,6 +15,7 @@ FutureOr<AuthResponse> refresh(Request request) async {
     throw VaneStackException(
       'Missing refresh token.',
       status: HttpStatus.badRequest,
+      code: AuthErrorCode.missingRefreshToken,
     );
   }
 

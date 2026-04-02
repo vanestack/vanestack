@@ -33,6 +33,7 @@ FutureOr<void> delete(
     throw VaneStackException(
       'Access to internal collections is denied.',
       status: HttpStatus.forbidden,
+      code: AuthErrorCode.permissionDenied,
     );
   }
 
@@ -45,6 +46,7 @@ FutureOr<void> delete(
     throw VaneStackException(
       'Collection not found.',
       status: HttpStatus.notFound,
+      code: CollectionsErrorCode.collectionNotFound,
     );
   }
 
@@ -59,6 +61,7 @@ FutureOr<void> delete(
     throw VaneStackException(
       'Cannot delete documents from view collections. Views are read-only.',
       status: HttpStatus.forbidden,
+      code: DocumentsErrorCode.viewIsReadOnly,
     );
   }
 
@@ -74,6 +77,7 @@ FutureOr<void> delete(
     throw VaneStackException(
       'Document not found.',
       status: HttpStatus.notFound,
+      code: DocumentsErrorCode.documentNotFound,
     );
   }
 
@@ -84,6 +88,7 @@ FutureOr<void> delete(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   } else if (deleteRule.trim().isNotEmpty && !request.isSuperUser) {
@@ -94,6 +99,7 @@ FutureOr<void> delete(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   }

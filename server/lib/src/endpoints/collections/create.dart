@@ -35,6 +35,7 @@ FutureOr<Collection> create(
       throw VaneStackException(
         'viewQuery is required for view collections.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewQueryRequired,
       );
     }
 
@@ -43,18 +44,21 @@ FutureOr<Collection> create(
       throw VaneStackException(
         'createRule cannot be set for view collections. Views are read-only.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewIsReadOnly,
       );
     }
     if (updateRule != null && updateRule.trim().isNotEmpty) {
       throw VaneStackException(
         'updateRule cannot be set for view collections. Views are read-only.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewIsReadOnly,
       );
     }
     if (deleteRule != null && deleteRule.trim().isNotEmpty) {
       throw VaneStackException(
         'deleteRule cannot be set for view collections. Views are read-only.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewIsReadOnly,
       );
     }
 

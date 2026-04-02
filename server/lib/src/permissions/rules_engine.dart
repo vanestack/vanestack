@@ -148,6 +148,7 @@ class RulesEngine {
                    ),
                    _ => throw VaneStackException(
                      'Invalid newResource provided for rules evaluation.',
+                     code: ServerErrorCode.unknownError,
                    ),
                  },
            timestamp: DateTime.now(),
@@ -174,6 +175,7 @@ class RulesEngine {
                  ),
                  _ => throw VaneStackException(
                    'Invalid oldResource provided for rules evaluation.',
+                   code: ServerErrorCode.unknownError,
                  ),
                },
        },
@@ -273,6 +275,7 @@ class RulesEngine {
           ),
           _ => throw VaneStackException(
             'Invalid oldResource provided for rules evaluation.',
+            code: ServerErrorCode.unknownError,
           ),
         },
       'get': _getDocument,

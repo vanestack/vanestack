@@ -32,6 +32,7 @@ FutureOr<Collection> update(
     throw VaneStackException(
       'Collection "$collectionName" does not exist.',
       status: HttpStatus.notFound,
+      code: CollectionsErrorCode.collectionNotFound,
     );
   }
 
@@ -41,6 +42,7 @@ FutureOr<Collection> update(
       throw VaneStackException(
         'Cannot modify attributes for view collections. Attributes are inferred from the view query.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewIsReadOnly,
       );
     }
 
@@ -49,6 +51,7 @@ FutureOr<Collection> update(
       throw VaneStackException(
         'Cannot set indexes for view collections. Views do not support indexes.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.indexesNotSupported,
       );
     }
 
@@ -57,18 +60,21 @@ FutureOr<Collection> update(
       throw VaneStackException(
         'Cannot set createRule for view collections. Views are read-only.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewIsReadOnly,
       );
     }
     if (updateRule != null && updateRule.trim().isNotEmpty) {
       throw VaneStackException(
         'Cannot set updateRule for view collections. Views are read-only.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewIsReadOnly,
       );
     }
     if (deleteRule != null && deleteRule.trim().isNotEmpty) {
       throw VaneStackException(
         'Cannot set deleteRule for view collections. Views are read-only.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewIsReadOnly,
       );
     }
 

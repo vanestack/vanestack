@@ -98,6 +98,7 @@ class SettingsService {
       throw VaneStackException(
         'Failed to update settings.',
         status: HttpStatus.internalServerError,
+        code: SettingsErrorCode.updateFailed,
       );
     }
 
@@ -119,6 +120,7 @@ class SettingsService {
       throw VaneStackException(
         'S3 settings not configured.',
         status: HttpStatus.badRequest,
+        code: SettingsErrorCode.s3NotConfigured,
       );
     }
 
@@ -131,6 +133,7 @@ class SettingsService {
       throw VaneStackException(
         'Failed to connect to S3.',
         status: HttpStatus.internalServerError,
+        code: SettingsErrorCode.s3ConnectionFailed,
       );
     }
 
@@ -157,6 +160,7 @@ class SettingsService {
       throw VaneStackException(
         'All fields are required.',
         status: HttpStatus.badRequest,
+        code: SettingsErrorCode.appleSecretGenerationFailed,
       );
     }
 
@@ -164,6 +168,7 @@ class SettingsService {
       throw VaneStackException(
         'Duration must be a positive integer.',
         status: HttpStatus.badRequest,
+        code: SettingsErrorCode.appleSecretGenerationFailed,
       );
     }
 
@@ -192,6 +197,7 @@ class SettingsService {
       throw VaneStackException(
         'Failed to generate client secret: ${e.toString()}',
         status: HttpStatus.badRequest,
+        code: SettingsErrorCode.appleSecretGenerationFailed,
       );
     }
   }

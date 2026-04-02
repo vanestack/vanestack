@@ -10,7 +10,10 @@ class HookCancelledException extends VaneStackException {
   final String hookId;
 
   HookCancelledException(this.hookId)
-      : super('Operation cancelled by hook "$hookId"');
+    : super(
+        'Operation cancelled by hook "$hookId"',
+        code: ServerErrorCode.hookCancelled,
+      );
 }
 
 // ==================== Document Events ====================
@@ -35,7 +38,10 @@ class AfterDocumentCreateEvent {
   final String collectionName;
   final Document result;
 
-  AfterDocumentCreateEvent({required this.collectionName, required this.result});
+  AfterDocumentCreateEvent({
+    required this.collectionName,
+    required this.result,
+  });
 }
 
 /// Fired before a document is updated.
@@ -63,7 +69,10 @@ class AfterDocumentUpdateEvent {
   final String collectionName;
   final Document result;
 
-  AfterDocumentUpdateEvent({required this.collectionName, required this.result});
+  AfterDocumentUpdateEvent({
+    required this.collectionName,
+    required this.result,
+  });
 }
 
 /// Fired before a document is deleted.

@@ -26,6 +26,7 @@ FutureOr<Document> get(
     throw VaneStackException(
       'Access to internal collections is denied.',
       status: HttpStatus.forbidden,
+      code: AuthErrorCode.permissionDenied,
     );
   }
 
@@ -38,6 +39,7 @@ FutureOr<Document> get(
     throw VaneStackException(
       'Collection not found.',
       status: HttpStatus.notFound,
+      code: CollectionsErrorCode.collectionNotFound,
     );
   }
 
@@ -53,6 +55,7 @@ FutureOr<Document> get(
     throw VaneStackException(
       'Document not found.',
       status: HttpStatus.notFound,
+      code: DocumentsErrorCode.documentNotFound,
     );
   }
 
@@ -64,6 +67,7 @@ FutureOr<Document> get(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   } else if (viewRule.trim().isNotEmpty && !request.isSuperUser) {
@@ -74,6 +78,7 @@ FutureOr<Document> get(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   }

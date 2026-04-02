@@ -280,17 +280,21 @@ class _AuthRoutes {
         result,
       );
       const sessionDeadCodes = {
-        ErrorCode.missingRefreshToken,
-        ErrorCode.invalidRefreshToken,
-        ErrorCode.expiredRefreshToken,
-        ErrorCode.userNotFound,
+        AuthErrorCode.missingRefreshToken,
+        AuthErrorCode.invalidRefreshToken,
+        AuthErrorCode.expiredRefreshToken,
+        AuthErrorCode.userNotFound,
       };
       if (sessionDeadCodes.contains(exception.code))
         await _vanestack._clearAuthData();
       throw exception;
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = AuthResponseMapper.fromJsonString(result);
     await _vanestack._saveAuthResponse(parsed);
@@ -332,7 +336,11 @@ class _AuthRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = AuthResponseMapper.fromJsonString(result);
     await _vanestack._saveAuthResponse(parsed);
@@ -362,7 +370,11 @@ class _AuthRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = AuthResponseMapper.fromJsonString(result);
     await _vanestack._saveAuthResponse(parsed);
@@ -391,7 +403,11 @@ class _AuthRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = UserMapper.fromJsonString(result);
     return parsed;
@@ -413,7 +429,11 @@ class _AuthRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = AuthResponseMapper.fromJsonString(result);
     await _vanestack._saveAuthResponse(parsed);
@@ -443,7 +463,11 @@ class _AuthRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = result;
     return parsed;
@@ -461,7 +485,11 @@ class _BucketsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = (jsonDecode(result) as List)
         .map((e) => BucketMapper.fromJson(e as Map<String, Object?>))
@@ -505,7 +533,11 @@ class _BucketsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = BucketMapper.fromJsonString(result);
     return parsed;
@@ -548,7 +580,11 @@ class _BucketsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = BucketMapper.fromJsonString(result);
     return parsed;
@@ -592,7 +628,11 @@ class _BucketsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = BucketMapper.fromJsonString(result);
     return parsed;
@@ -637,7 +677,11 @@ class _CollectionsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = CollectionMapper.fromJsonString(result);
     return parsed;
@@ -655,7 +699,11 @@ class _CollectionsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = (jsonDecode(result) as List)
         .map((e) => CollectionMapper.fromJson(e as Map<String, Object?>))
@@ -671,7 +719,11 @@ class _CollectionsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = ExportResponseMapper.fromJsonString(result);
     return parsed;
@@ -693,7 +745,11 @@ class _CollectionsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = ImportResponseMapper.fromJsonString(result);
     return parsed;
@@ -717,7 +773,11 @@ class _CollectionsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = CollectionMapper.fromJsonString(result);
     return parsed;
@@ -786,7 +846,11 @@ class _CollectionsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = CollectionMapper.fromJsonString(result);
     return parsed;
@@ -816,7 +880,11 @@ class _CollectionsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = GenerateResponseMapper.fromJsonString(result);
     return parsed;
@@ -848,7 +916,11 @@ class _LogsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = ListAppLogsResultMapper.fromJsonString(result);
     return parsed;
@@ -866,7 +938,11 @@ class _SettingsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = SettingsMapper.fromJsonString(result);
     return parsed;
@@ -899,7 +975,11 @@ class _SettingsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = SettingsMapper.fromJsonString(result);
     return parsed;
@@ -932,7 +1012,11 @@ class _SettingsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = result;
     return parsed;
@@ -959,7 +1043,11 @@ class _StatsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = DashboardStatsMapper.fromJsonString(result);
     return parsed;
@@ -991,7 +1079,11 @@ class _UsersRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = ListUsersResultMapper.fromJsonString(result);
     return parsed;
@@ -1022,7 +1114,11 @@ class _UsersRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = UserMapper.fromJsonString(result);
     return parsed;
@@ -1065,7 +1161,11 @@ class _UsersRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = UserMapper.fromJsonString(result);
     return parsed;
@@ -1105,7 +1205,11 @@ class _UsersRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = UserMapper.fromJsonString(result);
     return parsed;
@@ -1148,7 +1252,11 @@ class _DocumentsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = ListDocumentsResultMapper.fromJsonString(result);
     return parsed;
@@ -1180,7 +1288,11 @@ class _DocumentsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = DocumentMapper.fromJsonString(result);
     return parsed;
@@ -1208,7 +1320,11 @@ class _DocumentsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = DocumentMapper.fromJsonString(result);
     return parsed;
@@ -1265,7 +1381,11 @@ class _DocumentsRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = DocumentMapper.fromJsonString(result);
     return parsed;
@@ -1310,7 +1430,11 @@ class _FilesRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = ListFilesResultMapper.fromJsonString(result);
     return parsed;
@@ -1369,7 +1493,11 @@ class _FilesRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = FileMapper.fromJsonString(result);
     return parsed;
@@ -1430,7 +1558,11 @@ class _FilesRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = GetDownloadUrlResultMapper.fromJsonString(result);
     return parsed;
@@ -1465,7 +1597,11 @@ class _FilesRoutes {
       throw VaneStackException.fromJson(response.statusCode, result);
     }
     if (result == null) {
-      throw VaneStackException('Empty response body', status: 400);
+      throw VaneStackException(
+        'Empty response body',
+        status: 400,
+        code: ClientErrorCode.emptyResponseBody,
+      );
     }
     final parsed = FileMapper.fromJsonString(result);
     return parsed;

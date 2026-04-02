@@ -38,6 +38,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection name is required.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.collectionNameRequired,
       );
     }
 
@@ -45,6 +46,7 @@ class CollectionsService {
       throw VaneStackException(
         'Invalid collection name: "$name". Collection names must be valid identifiers.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.invalidCollectionName,
       );
     }
 
@@ -117,6 +119,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection name is required.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.collectionNameRequired,
       );
     }
 
@@ -124,6 +127,7 @@ class CollectionsService {
       throw VaneStackException(
         'Invalid collection name: "$name". Collection names must be valid identifiers.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.invalidCollectionName,
       );
     }
 
@@ -131,6 +135,7 @@ class CollectionsService {
       throw VaneStackException(
         'At least one attribute is required for base collections.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.validationFailed,
       );
     }
 
@@ -141,6 +146,7 @@ class CollectionsService {
         throw VaneStackException(
           'Cannot override system column "${attr.name}". System columns (id, created_at, updated_at) are automatically managed.',
           status: HttpStatus.badRequest,
+          code: CollectionsErrorCode.systemColumnOverride,
         );
       }
     }
@@ -240,6 +246,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection name is required.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.collectionNameRequired,
       );
     }
 
@@ -247,6 +254,7 @@ class CollectionsService {
       throw VaneStackException(
         'Invalid collection name: "$name". Collection names must be valid identifiers.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.invalidCollectionName,
       );
     }
 
@@ -254,6 +262,7 @@ class CollectionsService {
       throw VaneStackException(
         'viewQuery is required for view collections.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.viewQueryRequired,
       );
     }
 
@@ -279,6 +288,7 @@ class CollectionsService {
         throw VaneStackException(
           'Failed to create view: ${e.toString()}',
           status: HttpStatus.badRequest,
+          code: CollectionsErrorCode.viewCreationFailed,
         );
       }
 
@@ -293,6 +303,7 @@ class CollectionsService {
         throw VaneStackException(
           'View query must include an "id" column in the result.',
           status: HttpStatus.badRequest,
+          code: CollectionsErrorCode.viewQueryMissingId,
         );
       }
 
@@ -341,6 +352,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection name is required.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.collectionNameRequired,
       );
     }
 
@@ -348,6 +360,7 @@ class CollectionsService {
       throw VaneStackException(
         'Invalid collection name: "$name". Collection names must be valid identifiers.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.invalidCollectionName,
       );
     }
 
@@ -355,6 +368,7 @@ class CollectionsService {
       throw VaneStackException(
         'Invalid new collection name: "$newName". Collection names must be valid identifiers.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.invalidCollectionName,
       );
     }
 
@@ -362,6 +376,7 @@ class CollectionsService {
       throw VaneStackException(
         'At least one attribute is required.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.validationFailed,
       );
     }
 
@@ -373,6 +388,7 @@ class CollectionsService {
           throw VaneStackException(
             'Cannot override system column "${attr.name}". System columns (id, created_at, updated_at) are automatically managed.',
             status: HttpStatus.badRequest,
+            code: CollectionsErrorCode.systemColumnOverride,
           );
         }
       }
@@ -387,6 +403,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection "$name" does not exist.',
         status: HttpStatus.notFound,
+        code: CollectionsErrorCode.collectionNotFound,
       );
     }
 
@@ -395,6 +412,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection "$name" is not a base collection.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.notBaseCollection,
       );
     }
 
@@ -404,6 +422,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection "$name" does not exist.',
         status: HttpStatus.notFound,
+        code: CollectionsErrorCode.collectionNotFound,
       );
     }
 
@@ -528,6 +547,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection name is required.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.collectionNameRequired,
       );
     }
 
@@ -535,6 +555,7 @@ class CollectionsService {
       throw VaneStackException(
         'Invalid collection name: "$name". Collection names must be valid identifiers.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.invalidCollectionName,
       );
     }
 
@@ -547,6 +568,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection "$name" does not exist.',
         status: HttpStatus.notFound,
+        code: CollectionsErrorCode.collectionNotFound,
       );
     }
 
@@ -555,6 +577,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection "$name" is not a view collection.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.notViewCollection,
       );
     }
 
@@ -593,6 +616,7 @@ class CollectionsService {
           throw VaneStackException(
             'Failed to create view: ${e.toString()}',
             status: HttpStatus.badRequest,
+            code: CollectionsErrorCode.viewCreationFailed,
           );
         }
 
@@ -613,6 +637,7 @@ class CollectionsService {
           throw VaneStackException(
             'View query must include an "id" column in the result.',
             status: HttpStatus.badRequest,
+            code: CollectionsErrorCode.viewQueryMissingId,
           );
         }
 
@@ -672,6 +697,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection name is required.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.collectionNameRequired,
       );
     }
 
@@ -679,6 +705,7 @@ class CollectionsService {
       throw VaneStackException(
         'Invalid collection name: "$name". Collection names must be valid identifiers.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.invalidCollectionName,
       );
     }
 
@@ -691,6 +718,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection "$name" not found.',
         status: HttpStatus.notFound,
+        code: CollectionsErrorCode.collectionNotFound,
       );
     }
 
@@ -703,6 +731,7 @@ class CollectionsService {
         throw VaneStackException(
           'Cannot delete collection "$name" because it is referenced by view collection(s): ${dependentViews.join(", ")}. Delete the dependent views first.',
           status: HttpStatus.conflict,
+          code: CollectionsErrorCode.dependentViewsExist,
         );
       }
     }
@@ -857,6 +886,7 @@ class CollectionsService {
       throw VaneStackException(
         'Count must be between 1 and 1000.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.validationFailed,
       );
     }
 
@@ -865,6 +895,7 @@ class CollectionsService {
       throw VaneStackException(
         'Access to internal collections is denied.',
         status: HttpStatus.forbidden,
+        code: CollectionsErrorCode.collectionNotFound,
       );
     }
 
@@ -877,6 +908,7 @@ class CollectionsService {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
+        code: CollectionsErrorCode.collectionNotFound,
       );
     }
 
@@ -887,6 +919,7 @@ class CollectionsService {
       throw VaneStackException(
         'Cannot generate documents for view collections. Views are read-only.',
         status: HttpStatus.forbidden,
+        code: CollectionsErrorCode.viewIsReadOnly,
       );
     }
 
@@ -939,6 +972,7 @@ class CollectionsService {
         throw VaneStackException(
           'Index "${index.name}" references non-existent column "$column".',
           status: HttpStatus.badRequest,
+          code: CollectionsErrorCode.validationFailed,
         );
       }
     }
@@ -952,6 +986,7 @@ class CollectionsService {
       throw VaneStackException(
         'View query must be a SELECT statement.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.validationFailed,
       );
     }
 
@@ -978,6 +1013,7 @@ class CollectionsService {
         throw VaneStackException(
           'View query cannot contain $keyword statements.',
           status: HttpStatus.badRequest,
+          code: CollectionsErrorCode.validationFailed,
         );
       }
     }
@@ -987,6 +1023,7 @@ class CollectionsService {
       throw VaneStackException(
         'View query cannot contain semicolons (no multiple statements allowed).',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.validationFailed,
       );
     }
   }
@@ -1129,6 +1166,7 @@ class CollectionsService {
         'Invalid foreign key $context action: "$action". '
         'Allowed values: ${_validForeignKeyActions.join(', ')}',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.validationFailed,
       );
     }
   }
@@ -1143,6 +1181,7 @@ class CollectionsService {
       throw VaneStackException(
         'Invalid check constraint: contains disallowed characters.',
         status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.validationFailed,
       );
     }
 
@@ -1154,6 +1193,7 @@ class CollectionsService {
         throw VaneStackException(
           'Check constraint cannot contain $keyword.',
           status: HttpStatus.badRequest,
+          code: CollectionsErrorCode.validationFailed,
         );
       }
     }
@@ -1592,7 +1632,11 @@ class CollectionsService {
         .toList();
 
     if (columnsToKeep.isEmpty && newColumns.isEmpty) {
-      throw Exception('Cannot remove all attributes from collection.');
+      throw VaneStackException(
+        'Cannot remove all attributes from collection.',
+        status: HttpStatus.badRequest,
+        code: CollectionsErrorCode.validationFailed,
+      );
     }
 
     final columnDefs = <String>[];

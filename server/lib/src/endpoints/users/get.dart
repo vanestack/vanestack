@@ -15,7 +15,7 @@ FutureOr<User> get(Request request, String userId) async {
     throw VaneStackException(
       'User not found.',
       status: HttpStatus.notFound,
-      code: ErrorCode.userNotFound,
+      code: AuthErrorCode.userNotFound,
     );
   }
 

@@ -17,6 +17,7 @@ FutureOr<void> delete(Request request, String bucket) async {
     throw VaneStackException(
       'Bucket name is required.',
       status: HttpStatus.badRequest,
+      code: StorageErrorCode.bucketNameRequired,
     );
   }
 

@@ -22,7 +22,7 @@ FutureOr<ListFilesResult> list(
 
   final bucketEntity = await storageService.getBucket(bucket);
   if (bucketEntity == null) {
-    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound);
+    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound, code: StorageErrorCode.bucketNotFound);
   }
 
   final (files, folders) = await storageService.listFiles(
@@ -40,6 +40,7 @@ FutureOr<ListFilesResult> list(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   } else if (listRule.trim().isNotEmpty && !request.isSuperUser) {
@@ -53,6 +54,7 @@ FutureOr<ListFilesResult> list(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   }

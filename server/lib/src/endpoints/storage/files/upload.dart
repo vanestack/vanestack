@@ -44,6 +44,7 @@ FutureOr<File> upload(Request request, String bucket) async {
       throw VaneStackException(
         'Bucket not found.',
         status: HttpStatus.notFound,
+        code: StorageErrorCode.bucketNotFound,
       );
     }
 
@@ -51,6 +52,7 @@ FutureOr<File> upload(Request request, String bucket) async {
       throw VaneStackException(
         'File is required.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.fileRequired,
       );
     }
 
@@ -58,6 +60,7 @@ FutureOr<File> upload(Request request, String bucket) async {
       throw VaneStackException(
         'Path is required.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.invalidPath,
       );
     }
 
@@ -67,6 +70,7 @@ FutureOr<File> upload(Request request, String bucket) async {
       throw VaneStackException(
         'Path is required.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.invalidPath,
       );
     }
 
@@ -75,7 +79,11 @@ FutureOr<File> upload(Request request, String bucket) async {
         safePath.startsWith('/') ||
         safePath.contains('../') ||
         safePath.contains('..\\')) {
-      throw VaneStackException('Invalid path.', status: HttpStatus.badRequest);
+      throw VaneStackException(
+        'Invalid path.',
+        status: HttpStatus.badRequest,
+        code: StorageErrorCode.invalidPath,
+      );
     }
 
     final mimeType =
@@ -83,7 +91,10 @@ FutureOr<File> upload(Request request, String bucket) async {
 
     final filename = basename(file.filename!);
     if (filename.isEmpty || filename.contains('..')) {
-      throw VaneStackException('Invalid filename.');
+      throw VaneStackException(
+        'Invalid filename.',
+        code: StorageErrorCode.invalidPath,
+      );
     }
 
     // If the path already includes a filename (has an extension), use it as-is.
@@ -121,6 +132,7 @@ FutureOr<File> upload(Request request, String bucket) async {
         throw VaneStackException(
           'Permission denied.',
           status: HttpStatus.forbidden,
+          code: AuthErrorCode.permissionDenied,
         );
       }
     } else if (createRule.trim().isNotEmpty && !request.isSuperUser) {
@@ -131,6 +143,7 @@ FutureOr<File> upload(Request request, String bucket) async {
         throw VaneStackException(
           'Permission denied.',
           status: HttpStatus.forbidden,
+          code: AuthErrorCode.permissionDenied,
         );
       }
     }
@@ -149,6 +162,7 @@ FutureOr<File> upload(Request request, String bucket) async {
     throw VaneStackException(
       'No multipart data found in request',
       status: HttpStatus.badRequest,
+      code: StorageErrorCode.multipartDataRequired,
     );
   }
 }

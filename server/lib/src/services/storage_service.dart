@@ -56,6 +56,7 @@ class StorageService {
       throw VaneStackException(
         'Local storage is disabled and S3 is not configured.',
         status: HttpStatus.serviceUnavailable,
+        code: StorageErrorCode.storageNotConfigured,
       );
     }
 
@@ -80,6 +81,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket name is required.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.bucketNameRequired,
       );
     }
 
@@ -87,6 +89,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket name must start with a lowercase letter and contain only lowercase letters, numbers and underscores.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.invalidBucketName,
       );
     }
 
@@ -116,6 +119,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket name is required.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.bucketNameRequired,
       );
     }
 
@@ -147,6 +151,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket name is required.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.bucketNameRequired,
       );
     }
 
@@ -154,6 +159,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket name must start with a lowercase letter and contain only lowercase letters, numbers and underscores.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.invalidBucketName,
       );
     }
 
@@ -173,6 +179,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket not found.',
         status: HttpStatus.notFound,
+        code: StorageErrorCode.bucketNotFound,
       );
     }
 
@@ -195,6 +202,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket name is required.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.bucketNameRequired,
       );
     }
 
@@ -252,6 +260,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket not found.',
         status: HttpStatus.notFound,
+        code: StorageErrorCode.bucketNotFound,
       );
     }
 
@@ -373,6 +382,7 @@ class StorageService {
       throw VaneStackException(
         'Bucket not found.',
         status: HttpStatus.notFound,
+        code: StorageErrorCode.bucketNotFound,
       );
     }
 
@@ -399,7 +409,11 @@ class StorageService {
         p.isAbsolute(safePath) ||
         safePath.contains('..') ||
         safePath.startsWith('/')) {
-      throw VaneStackException('Invalid path.', status: HttpStatus.badRequest);
+      throw VaneStackException(
+        'Invalid path.',
+        status: HttpStatus.badRequest,
+        code: StorageErrorCode.invalidPath,
+      );
     }
 
     // Block dangerous file extensions
@@ -407,6 +421,7 @@ class StorageService {
       throw VaneStackException(
         'File type not allowed.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.fileTypeNotAllowed,
       );
     }
 
@@ -425,6 +440,7 @@ class StorageService {
         throw VaneStackException(
           'File size exceeds maximum allowed size of ${_formatBytes(maxFileSize)}.',
           status: HttpStatus.requestEntityTooLarge,
+          code: StorageErrorCode.fileSizeExceeded,
         );
       }
 
@@ -442,6 +458,7 @@ class StorageService {
           throw VaneStackException(
             validationError,
             status: HttpStatus.badRequest,
+            code: StorageErrorCode.invalidMimeType,
           );
         }
       }
@@ -529,7 +546,11 @@ class StorageService {
   }) async {
     final file = await getFileById(fileId);
     if (file == null) {
-      throw VaneStackException('File not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'File not found.',
+        status: HttpStatus.notFound,
+        code: StorageErrorCode.fileNotFound,
+      );
     }
 
     // Normalize and validate destination
@@ -541,6 +562,7 @@ class StorageService {
       throw VaneStackException(
         'Invalid destination path.',
         status: HttpStatus.badRequest,
+        code: StorageErrorCode.invalidPath,
       );
     }
 
@@ -593,7 +615,11 @@ class StorageService {
   }) async {
     final file = await getFileByPath(bucket: bucket, path: path);
     if (file == null) {
-      throw VaneStackException('File not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'File not found.',
+        status: HttpStatus.notFound,
+        code: StorageErrorCode.fileNotFound,
+      );
     }
     return moveFile(fileId: file.id, destination: destination);
   }
@@ -604,7 +630,11 @@ class StorageService {
   Future<void> deleteFile(String fileId) async {
     final file = await getFileById(fileId);
     if (file == null) {
-      throw VaneStackException('File not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'File not found.',
+        status: HttpStatus.notFound,
+        code: StorageErrorCode.fileNotFound,
+      );
     }
 
     if (context.hooks != null) {
@@ -659,7 +689,11 @@ class StorageService {
   }) async {
     final file = await getFileByPath(bucket: bucket, path: path);
     if (file == null) {
-      throw VaneStackException('File not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'File not found.',
+        status: HttpStatus.notFound,
+        code: StorageErrorCode.fileNotFound,
+      );
     }
 
     // Delete from storage
@@ -708,7 +742,11 @@ class StorageService {
     final file = await getFileById(fileId);
 
     if (file == null || file.bucket != bucketName) {
-      throw VaneStackException('File not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'File not found.',
+        status: HttpStatus.notFound,
+        code: StorageErrorCode.fileNotFound,
+      );
     }
 
     final token = file.downloadToken;
@@ -720,6 +758,7 @@ class StorageService {
       throw VaneStackException(
         'App settings not found.',
         status: HttpStatus.internalServerError,
+        code: StorageErrorCode.settingsNotFound,
       );
     }
 

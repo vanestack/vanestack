@@ -45,6 +45,7 @@ class S3Storage extends Storage {
       throw VaneStackException(
         'File not found: $bucket/$path',
         status: HttpStatus.notFound,
+        code: StorageErrorCode.fileNotFound,
       );
     }
 

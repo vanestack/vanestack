@@ -51,6 +51,7 @@ class DocumentsService {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
+        code: DocumentsErrorCode.collectionNotFound,
       );
     }
 
@@ -60,6 +61,7 @@ class DocumentsService {
       throw VaneStackException(
         'Cannot create documents in view collections. Views are read-only.',
         status: HttpStatus.forbidden,
+        code: DocumentsErrorCode.viewIsReadOnly,
       );
     }
 
@@ -71,6 +73,7 @@ class DocumentsService {
       throw VaneStackException(
         'Validation failed: ${e.message}',
         status: HttpStatus.badRequest,
+        code: DocumentsErrorCode.validationFailed,
       );
     }
 
@@ -158,6 +161,7 @@ class DocumentsService {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
+        code: DocumentsErrorCode.collectionNotFound,
       );
     }
 
@@ -194,6 +198,7 @@ class DocumentsService {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
+        code: DocumentsErrorCode.collectionNotFound,
       );
     }
 
@@ -278,6 +283,7 @@ class DocumentsService {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
+        code: DocumentsErrorCode.collectionNotFound,
       );
     }
 
@@ -287,6 +293,7 @@ class DocumentsService {
       throw VaneStackException(
         'Cannot update documents in view collections. Views are read-only.',
         status: HttpStatus.forbidden,
+        code: DocumentsErrorCode.viewIsReadOnly,
       );
     }
 
@@ -298,6 +305,7 @@ class DocumentsService {
       throw VaneStackException(
         'Validation failed: ${e.message}',
         status: HttpStatus.badRequest,
+        code: DocumentsErrorCode.validationFailed,
       );
     }
 
@@ -312,6 +320,7 @@ class DocumentsService {
       throw VaneStackException(
         'Document not found.',
         status: HttpStatus.notFound,
+        code: DocumentsErrorCode.documentNotFound,
       );
     }
 
@@ -403,6 +412,7 @@ class DocumentsService {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
+        code: DocumentsErrorCode.collectionNotFound,
       );
     }
 
@@ -412,6 +422,7 @@ class DocumentsService {
       throw VaneStackException(
         'Cannot delete documents from view collections. Views are read-only.',
         status: HttpStatus.forbidden,
+        code: DocumentsErrorCode.viewIsReadOnly,
       );
     }
 
@@ -428,6 +439,7 @@ class DocumentsService {
       throw VaneStackException(
         'Document not found.',
         status: HttpStatus.notFound,
+        code: DocumentsErrorCode.documentNotFound,
       );
     }
 

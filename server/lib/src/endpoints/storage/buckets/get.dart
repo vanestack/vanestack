@@ -16,7 +16,7 @@ FutureOr<Bucket> get(Request request, String bucket) async {
   final result = await request.storageService.getBucket(bucket);
 
   if (result == null) {
-    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound);
+    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound, code: StorageErrorCode.bucketNotFound);
   }
 
   return result;

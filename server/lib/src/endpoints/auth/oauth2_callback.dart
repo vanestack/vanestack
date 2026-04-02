@@ -65,11 +65,19 @@ Future<Response> _handleCallback(
   String? userName,
 ) async {
   if (code == null) {
-    throw VaneStackException('Missing code', status: HttpStatus.badRequest);
+    throw VaneStackException(
+      'Missing code',
+      status: HttpStatus.badRequest,
+      code: AuthErrorCode.invalidCode,
+    );
   }
 
   if (state == null) {
-    throw VaneStackException('Missing state', status: HttpStatus.badRequest);
+    throw VaneStackException(
+      'Missing state',
+      status: HttpStatus.badRequest,
+      code: AuthErrorCode.invalidState,
+    );
   }
 
   final settings = await request.settings();

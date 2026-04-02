@@ -46,6 +46,7 @@ class UsersService {
       throw VaneStackException(
         'Invalid email address.',
         status: HttpStatus.badRequest,
+        code: UsersErrorCode.invalidEmail,
       );
     }
 
@@ -53,6 +54,7 @@ class UsersService {
       throw VaneStackException(
         'Invalid user ID format.',
         status: HttpStatus.badRequest,
+        code: UsersErrorCode.invalidUserId,
       );
     }
 
@@ -65,6 +67,7 @@ class UsersService {
       throw VaneStackException(
         'A user with this email already exists.',
         status: HttpStatus.conflict,
+        code: UsersErrorCode.emailAlreadyExists,
       );
     }
 
@@ -92,6 +95,7 @@ class UsersService {
         throw VaneStackException(
           validationError,
           status: HttpStatus.badRequest,
+          code: UsersErrorCode.weakPassword,
         );
       }
     }
@@ -235,6 +239,7 @@ class UsersService {
         throw VaneStackException(
           'Invalid email address.',
           status: HttpStatus.badRequest,
+          code: UsersErrorCode.invalidEmail,
         );
       }
     }
@@ -245,6 +250,7 @@ class UsersService {
         throw VaneStackException(
           validationError,
           status: HttpStatus.badRequest,
+          code: UsersErrorCode.weakPassword,
         );
       }
     }
@@ -286,7 +292,11 @@ class UsersService {
         .getSingleOrNull();
 
     if (user == null) {
-      throw VaneStackException('User not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'User not found.',
+        status: HttpStatus.notFound,
+        code: UsersErrorCode.userNotFound,
+      );
     }
 
     final providers = await _getProviders([user.id]);

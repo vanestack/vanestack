@@ -121,6 +121,7 @@ Future<Map<String, dynamic>> exchangeCodeForToken(
     throw VaneStackException(
       'Failed to exchange code for token.',
       status: HttpStatus.internalServerError,
+      code: AuthErrorCode.invalidToken,
     );
   }
 
@@ -138,6 +139,7 @@ Future<SocialUser> fetchSocialUser(
       throw VaneStackException(
         'Missing id_token from Apple',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidToken,
       );
     }
 
@@ -146,6 +148,7 @@ Future<SocialUser> fetchSocialUser(
       throw VaneStackException(
         'Invalid id_token format',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidToken,
       );
     }
 

@@ -66,6 +66,7 @@ class AuthService {
         throw VaneStackException(
           validationError,
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.weakPassword,
         );
       }
 
@@ -100,6 +101,7 @@ class AuthService {
         throw VaneStackException(
           'User not registered with password.',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.userNotRegisteredWithPassword,
         );
       }
 
@@ -114,6 +116,7 @@ class AuthService {
         throw VaneStackException(
           'Invalid password.',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.invalidCredentials,
         );
       }
 
@@ -194,6 +197,7 @@ class AuthService {
       throw VaneStackException(
         'Email is required.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidEmail,
       );
     }
 
@@ -201,6 +205,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid email format.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidEmail,
       );
     }
 
@@ -212,6 +217,7 @@ class AuthService {
       throw VaneStackException(
         'User with that email does not exist.',
         status: HttpStatus.notFound,
+        code: AuthErrorCode.userNotFound,
       );
     }
 
@@ -244,6 +250,7 @@ class AuthService {
       throw VaneStackException(
         'Email is required.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidEmail,
       );
     }
 
@@ -255,6 +262,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid email format.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidEmail,
       );
     }
 
@@ -305,6 +313,7 @@ class AuthService {
       throw VaneStackException(
         'Email is required.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidEmail,
       );
     }
 
@@ -312,16 +321,11 @@ class AuthService {
       throw VaneStackException(
         'OTP is required.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidOtp,
       );
     }
 
-    // Clean up expired OTPs for this email
-    await db.otps.deleteWhere(
-      (o) =>
-          o.email.equals(formattedEmail) &
-          o.expiresAt.isSmallerThanValue(DateTime.now()),
-    );
-
+    // Look up the OTP before any deletion so we can distinguish invalid vs expired
     final row =
         await (db.otps.select()..where(
               (o) => o.email.equals(formattedEmail) & o.otp.equals(otp),
@@ -329,13 +333,18 @@ class AuthService {
             .getSingleOrNull();
 
     if (row == null) {
-      throw VaneStackException('Invalid OTP.', status: HttpStatus.badRequest);
+      throw VaneStackException(
+        'Invalid OTP.',
+        status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidOtp,
+      );
     }
 
     if (row.expiresAt.isBefore(DateTime.now())) {
       throw VaneStackException(
         'OTP has expired.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.expiredOtp,
       );
     }
 
@@ -393,7 +402,7 @@ class AuthService {
       throw VaneStackException(
         'Missing refresh token.',
         status: HttpStatus.badRequest,
-        code: ErrorCode.missingRefreshToken,
+        code: AuthErrorCode.missingRefreshToken,
       );
     }
 
@@ -407,7 +416,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid refresh token.',
         status: HttpStatus.badRequest,
-        code: ErrorCode.invalidRefreshToken,
+        code: AuthErrorCode.invalidRefreshToken,
       );
     }
 
@@ -419,7 +428,7 @@ class AuthService {
       throw VaneStackException(
         'Refresh token expired.',
         status: HttpStatus.badRequest,
-        code: ErrorCode.expiredRefreshToken,
+        code: AuthErrorCode.expiredRefreshToken,
       );
     }
 
@@ -435,7 +444,7 @@ class AuthService {
       throw VaneStackException(
         'User not found.',
         status: HttpStatus.notFound,
-        code: ErrorCode.userNotFound,
+        code: AuthErrorCode.userNotFound,
       );
     }
 
@@ -480,6 +489,7 @@ class AuthService {
       throw VaneStackException(
         'Missing access token.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.missingAccessToken,
       );
     }
 
@@ -492,6 +502,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid access token.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidAccessToken,
       );
     }
 
@@ -516,6 +527,7 @@ class AuthService {
       throw VaneStackException(
         'User with that email does not exist.',
         status: HttpStatus.notFound,
+        code: AuthErrorCode.userNotFound,
       );
     }
 
@@ -551,6 +563,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid redirect URL.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidRedirectUrl,
       );
     }
 
@@ -609,6 +622,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid reset token.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidResetToken,
       );
     }
 
@@ -620,6 +634,7 @@ class AuthService {
       throw VaneStackException(
         'Reset token expired.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.expiredResetToken,
       );
     }
 
@@ -630,7 +645,11 @@ class AuthService {
         'Password reset failed: weak password',
         userId: tokenRecord.userId,
       );
-      throw VaneStackException(validationError, status: HttpStatus.badRequest);
+      throw VaneStackException(
+        validationError,
+        status: HttpStatus.badRequest,
+        code: AuthErrorCode.weakPassword,
+      );
     }
 
     final user =
@@ -642,7 +661,11 @@ class AuthService {
         'Password reset failed: user not found',
         userId: tokenRecord.userId,
       );
-      throw VaneStackException('User not found.', status: HttpStatus.notFound);
+      throw VaneStackException(
+        'User not found.',
+        status: HttpStatus.notFound,
+        code: AuthErrorCode.userNotFound,
+      );
     }
 
     if (user.passwordHash != null &&
@@ -651,6 +674,7 @@ class AuthService {
       throw VaneStackException(
         'New password must be different from the old.',
         status: HttpStatus.conflict,
+        code: AuthErrorCode.samePassword,
       );
     }
 
@@ -693,6 +717,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid redirect URL.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidRedirectUrl,
       );
     }
 
@@ -702,6 +727,7 @@ class AuthService {
       throw VaneStackException(
         'OAuth provider not configured',
         status: HttpStatus.internalServerError,
+        code: AuthErrorCode.providerNotConfigured,
       );
     }
 
@@ -709,6 +735,7 @@ class AuthService {
       throw VaneStackException(
         'OAuth provider is disabled',
         status: HttpStatus.internalServerError,
+        code: AuthErrorCode.providerDisabled,
       );
     }
 
@@ -767,6 +794,7 @@ class AuthService {
       throw VaneStackException(
         'Invalid or expired state',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.invalidState,
       );
     }
 
@@ -779,6 +807,7 @@ class AuthService {
       throw VaneStackException(
         'OAuth2 provider not configured.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.providerNotConfigured,
       );
     }
 
@@ -786,6 +815,7 @@ class AuthService {
       throw VaneStackException(
         'OAuth2 provider is disabled.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.providerDisabled,
       );
     }
 
@@ -833,6 +863,7 @@ class AuthService {
         throw VaneStackException(
           'Email not provided by OAuth2 provider.',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.emailNotProvided,
         );
       }
 
@@ -840,6 +871,7 @@ class AuthService {
         throw VaneStackException(
           'Email not verified by OAuth2 provider.',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.emailNotVerified,
         );
       }
 
@@ -920,10 +952,19 @@ class AuthService {
       IdTokenAuthProvider.facebook => settings.oauthProviders.facebook,
     };
 
-    if (oauthSettings == null || !oauthSettings.enabled) {
+    if (oauthSettings == null) {
       throw VaneStackException(
-        'Provider not configured or disabled',
+        'Provider not configured.',
         status: HttpStatus.badRequest,
+        code: AuthErrorCode.providerNotConfigured,
+      );
+    }
+
+    if (!oauthSettings.enabled) {
+      throw VaneStackException(
+        'Provider is disabled.',
+        status: HttpStatus.badRequest,
+        code: AuthErrorCode.providerDisabled,
       );
     }
 
@@ -944,6 +985,7 @@ class AuthService {
         throw VaneStackException(
           'Missing key ID (kid) in token header',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.invalidToken,
         );
       }
 
@@ -953,6 +995,7 @@ class AuthService {
         throw VaneStackException(
           'Public key not found for kid: $kid',
           status: HttpStatus.unauthorized,
+          code: AuthErrorCode.invalidToken,
         );
       }
 
@@ -963,11 +1006,13 @@ class AuthService {
         throw VaneStackException(
           'Token has expired',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.tokenExpired,
         );
       } on JWTException catch (e) {
         throw VaneStackException(
           'Invalid token signature: ${e.message}',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.invalidToken,
         );
       }
 
@@ -987,6 +1032,7 @@ class AuthService {
         throw VaneStackException(
           'Invalid issuer',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.invalidIssuer,
         );
       }
 
@@ -998,6 +1044,7 @@ class AuthService {
         throw VaneStackException(
           'Invalid audience',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.invalidAudience,
         );
       }
 
@@ -1009,6 +1056,7 @@ class AuthService {
           throw VaneStackException(
             'Invalid nonce',
             status: HttpStatus.badRequest,
+            code: AuthErrorCode.invalidNonce,
           );
         }
       }
@@ -1023,6 +1071,7 @@ class AuthService {
         throw VaneStackException(
           'Invalid token format',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.invalidToken,
         );
       }
 
@@ -1063,6 +1112,7 @@ class AuthService {
         throw VaneStackException(
           'Email not provided in token',
           status: HttpStatus.badRequest,
+          code: AuthErrorCode.emailNotProvided,
         );
       }
 

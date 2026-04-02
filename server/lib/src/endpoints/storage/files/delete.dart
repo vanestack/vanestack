@@ -18,7 +18,7 @@ FutureOr<void> delete(Request request, String bucket, String path) async {
           .getSingleOrNull();
 
   if (bucketEntity == null) {
-    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound);
+    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound, code: StorageErrorCode.bucketNotFound);
   }
 
   // Query all files matching the path (exact match or prefix for folder contents)
@@ -31,7 +31,7 @@ FutureOr<void> delete(Request request, String bucket, String path) async {
           .get();
 
   if (files.isEmpty) {
-    throw VaneStackException('File not found.', status: HttpStatus.notFound);
+    throw VaneStackException('File not found.', status: HttpStatus.notFound, code: StorageErrorCode.fileNotFound);
   }
 
   // Filter files by permission (check each file individually)
@@ -57,6 +57,7 @@ FutureOr<void> delete(Request request, String bucket, String path) async {
     throw VaneStackException(
       'Permission denied.',
       status: HttpStatus.forbidden,
+      code: AuthErrorCode.permissionDenied,
     );
   }
 

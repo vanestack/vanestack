@@ -22,7 +22,7 @@ FutureOr<File> move(
           .getSingleOrNull();
 
   if (bucketEntity == null) {
-    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound);
+    throw VaneStackException('Bucket not found.', status: HttpStatus.notFound, code: StorageErrorCode.bucketNotFound);
   }
 
   final file =
@@ -31,7 +31,7 @@ FutureOr<File> move(
           .getSingleOrNull();
 
   if (file == null) {
-    throw VaneStackException('File not found.', status: HttpStatus.notFound);
+    throw VaneStackException('File not found.', status: HttpStatus.notFound, code: StorageErrorCode.fileNotFound);
   }
 
   final updateRule = bucketEntity.updateRule;
@@ -40,6 +40,7 @@ FutureOr<File> move(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   } else if (updateRule.trim().isNotEmpty && !request.isSuperUser) {
@@ -50,6 +51,7 @@ FutureOr<File> move(
       throw VaneStackException(
         'Permission denied.',
         status: HttpStatus.forbidden,
+        code: AuthErrorCode.permissionDenied,
       );
     }
   }

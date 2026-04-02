@@ -15,6 +15,7 @@ FutureOr<void> logout(Request request) async {
     throw VaneStackException(
       'Missing access token.',
       status: HttpStatus.badRequest,
+      code: AuthErrorCode.missingAccessToken,
     );
   }
 

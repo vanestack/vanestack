@@ -19,6 +19,7 @@ FutureOr<Collection> get(Request request, String collectionName) async {
     throw VaneStackException(
       'Collection "$collectionName" not found.',
       status: HttpStatus.notFound,
+      code: CollectionsErrorCode.collectionNotFound,
     );
   }
 

@@ -47,7 +47,7 @@ If you want to add custom routes, middleware, or extend the server, add VaneStac
 1. Add `vanestack` to your `pubspec.yaml`:
 ```yaml
 dependencies:
-  vanestack: ^1.0.0
+  vanestack: ^0.1.1
 ```
 
 2. Create `bin/main.dart`:

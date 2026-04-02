@@ -615,7 +615,7 @@ class HookRegistry {
   /// Registers a hook that runs after the server starts.
   ///
   /// The [callback] receives a [ServerStartedEvent] with the server's
-  /// [address] and [port].
+  /// address and port.
   String onServerStarted(
     FutureOr<void> Function(ServerStartedEvent) callback, {
     String? id,

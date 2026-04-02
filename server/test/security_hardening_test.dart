@@ -78,6 +78,52 @@ void main() {
       expect(res.json?['error'], contains('Too many requests'));
     });
 
+    test('resets rate limit after window expires', () async {
+      // Use a very short window (1 second)
+      final shortPort = await findFreePort();
+      final shortEnv = Environment(
+        port: shortPort,
+        rateLimitMax: 2,
+        rateLimitWindowSeconds: 1,
+      );
+      final shortDb =
+          AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
+      final shortServer = MockServer(db: shortDb, env: shortEnv);
+      await shortServer.start();
+      final shortClient = JsonHttpClient('127.0.0.1', shortPort);
+
+      try {
+        // Exhaust the limit
+        for (var i = 0; i < 2; i++) {
+          await shortClient.post(
+            '/v1/auth/sign-in-email-password',
+            body: {'email': 'evict$i@example.com', 'password': 'Secur3T3st!ng'},
+          );
+        }
+
+        // Should be rate limited
+        var res = await shortClient.post(
+          '/v1/auth/sign-in-email-password',
+          body: {'email': 'evict@example.com', 'password': 'Secur3T3st!ng'},
+        );
+        expect(res.status, 429);
+
+        // Wait for window to expire
+        await Future.delayed(const Duration(seconds: 2));
+
+        // Should be allowed again (stale entries evicted)
+        res = await shortClient.post(
+          '/v1/auth/sign-in-email-password',
+          body: {'email': 'evict@example.com', 'password': 'Secur3T3st!ng'},
+        );
+        expect(res.status, isNot(429));
+      } finally {
+        shortClient.close();
+        shortDb.close();
+        await shortServer.stop();
+      }
+    });
+
     test('does not rate-limit non-auth endpoints', () async {
       final jwt = AuthUtils.generateJwt(
         userId: 'test_user',

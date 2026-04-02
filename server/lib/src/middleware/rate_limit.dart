@@ -35,10 +35,15 @@ Middleware rateLimit({String pathPrefix = '/v1/auth'}) =>
         final now = DateTime.now();
         final windowStart = now.subtract(Duration(seconds: windowSeconds));
 
+        // Evict stale IPs to prevent unbounded memory growth
+        requests.removeWhere(
+          (_, timestamps) => timestamps.every((t) => t.isBefore(windowStart)),
+        );
+
         // Get or create the request list for this IP
         final ipRequests = requests[ip] ??= [];
 
-        // Remove expired entries
+        // Remove expired entries for this IP
         ipRequests.removeWhere((t) => t.isBefore(windowStart));
 
         if (ipRequests.length >= maxRequests) {

@@ -286,7 +286,7 @@ void main() {
       // Verify UNIQUE constraint in schema
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="users"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='users'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -307,7 +307,7 @@ void main() {
       // Verify unique exists
       var tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="accounts"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='accounts'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), contains('UNIQUE'));
@@ -327,7 +327,7 @@ void main() {
       // Verify UNIQUE constraint removed
       tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="accounts"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='accounts'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -376,7 +376,7 @@ void main() {
       // Verify FK to v1
       var tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="products"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='products'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), contains('categories_v1'));
@@ -400,7 +400,7 @@ void main() {
       // Verify FK now points to v2
       tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="products"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='products'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -457,7 +457,7 @@ void main() {
       // Verify ON DELETE CASCADE
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="books"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='books'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), contains('ON DELETE CASCADE'));
@@ -492,7 +492,7 @@ void main() {
       // Verify FK exists
       var tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="employees"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='employees'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), contains('REFERENCES'));
@@ -513,7 +513,7 @@ void main() {
       // Verify FK removed
       tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="employees"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='employees'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), isNot(contains('REFERENCES')));
@@ -541,7 +541,7 @@ void main() {
       // Verify initial constraint
       var tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="products"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='products'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), contains('quantity >= 0'));
@@ -565,7 +565,7 @@ void main() {
       // Verify new constraint
       tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="products"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='products'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -603,7 +603,7 @@ void main() {
       // Verify constraint removed
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="ratings"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='ratings'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), isNot(contains('CHECK')));
@@ -642,7 +642,7 @@ void main() {
       // Verify default value in schema
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="settings"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='settings'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), contains('DEFAULT'));
@@ -666,7 +666,7 @@ void main() {
       // Verify initial default
       var tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="counters"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='counters'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), contains('DEFAULT 0'));
@@ -687,7 +687,7 @@ void main() {
       // Verify new default
       tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="counters"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='counters'",
           )
           .getSingle();
       expect(tableInfo.read<String>('sql'), contains('DEFAULT 100'));
@@ -723,7 +723,7 @@ void main() {
       // Verify default removed (enabled column should not have DEFAULT)
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="flags"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='flags'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');

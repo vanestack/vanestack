@@ -66,7 +66,7 @@ void main() {
       // Verify CHECK constraint exists in schema
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="products"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='products'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -106,7 +106,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="users"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='users'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -136,7 +136,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="employees"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='employees'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -169,7 +169,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="inventory"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='inventory'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -209,7 +209,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="products"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='products'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -248,7 +248,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="books"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='books'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -287,7 +287,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="employees"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='employees'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -334,7 +334,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="tasks"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -384,7 +384,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="employees"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='employees'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');
@@ -425,7 +425,7 @@ void main() {
 
       final tableInfo = await database
           .customSelect(
-            'SELECT sql FROM sqlite_master WHERE type="table" AND name="items"',
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='items'",
           )
           .getSingle();
       final schema = tableInfo.read<String>('sql');

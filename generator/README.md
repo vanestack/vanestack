@@ -28,7 +28,7 @@ Add as a **dev dependency** alongside `build_runner`:
 ```yaml
 dev_dependencies:
   build_runner: ^2.10.2
-  vanestack_generator: ^0.1.0
+  vanestack_generator: # see pub.dev for latest version
 ```
 
 ## Usage

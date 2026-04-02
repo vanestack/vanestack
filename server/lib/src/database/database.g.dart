@@ -2773,7 +2773,7 @@ class $OtpsTable extends Otps with TableInfo<$OtpsTable, Otp> {
     requiredDuringInsert: false,
     defaultValue: DateTimeExpressions(
       currentDateAndTime,
-    ).modify(DateTimeModifier.hours(1)),
+    ).modify(DateTimeModifier.minutes(10)),
   );
   @override
   List<GeneratedColumn> get $columns => [id, email, otp, createdAt, expiresAt];

@@ -1,228 +1,72 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+VaneStack is a Dart backend framework (PocketBase-inspired) monorepo: `server/`, `common/`, `client/`, `dashboard/`.
 
-## Project Overview
-
-VaneStack is a Dart backend framework inspired by PocketBase. This monorepo contains the framework, shared packages, and admin dashboard. The cloud platform ([vanestack/cloud](https://github.com/vanestack/cloud)) is a separate private repo.
-
-## Repository Structure
-
-```
-VaneStack/
-├── server/                        # Backend framework
-│   ├── bin/vanestack.dart         # CLI entry point
-│   ├── lib/
-│   │   ├── vanestack.dart         # CLI CommandRunner
-│   │   └── src/
-│   │       ├── server.dart        # HTTP server + middleware pipeline
-│   │       ├── routes.dart        # AUTO-GENERATED - never edit
-│   │       ├── endpoints/         # HTTP handlers (auto-discovered)
-│   │       ├── services/          # Business logic layer
-│   │       ├── database/          # Drift ORM (tables in database/tables/)
-│   │       ├── middleware/        # Request processing (inject, cors, jwt, logging)
-│   │       ├── realtime/          # SSE event bus
-│   │       └── utils/             # Helpers (auth, filtering, S3, etc.)
-│   └── test/                      # Integration tests
-├── common/                        # Shared models (server, client, dashboard)
-├── client/                        # Generated HTTP client SDK
-└── dashboard/                     # Jaspr admin UI (client-mode SPA)
-```
-
-### Package Dependencies
-
-```
-server
-├── common
-└── client
-    └── common
-
-dashboard
-├── client
-│   └── common
-└── common
-```
-
----
-
-## Server (`server/`)
-
-### Common Commands
+## Key Commands
 
 ```bash
-cd server
-
-# Install dependencies
-dart pub get
-
-# Run server (serves dashboard from embedded build)
-dart run bin/vanestack.dart start
-
-# Run in dev mode (proxies dashboard from localhost:8079)
-dart run bin/vanestack.dart start --dev
-
-# Create admin user
+# Server
+cd server && dart pub get
+dart run bin/vanestack.dart start          # prod (embedded dashboard)
+dart run bin/vanestack.dart start --dev    # dev (proxies dashboard :8079)
 dart run bin/vanestack.dart users create -e test@test.com -p mypassword -s
-
-# Code generation - REQUIRED after changing endpoints
-dart run build_runner build       # regenerate routes
-dart run build_runner watch       # watch mode for routes
-dart run bin/vanestack.dart generate   # regenerate client SDK
-
-# Run tests
+dart run build_runner build                # regenerate routes (REQUIRED after endpoint changes)
+dart run bin/vanestack.dart generate       # regenerate client SDK
 dart test
-dart test test/auth_flow_test.dart  # single test file
-```
 
-### Dashboard Development
-
-```bash
-cd dashboard
-jaspr serve --port 8079  # main server proxies to this port
-
-# Production build
+# Dashboard
+cd dashboard && jaspr serve --port 8079
 jaspr build  # output: build/jaspr/
 ```
 
-### Services Layer
+## Endpoints
 
-Business logic is in service classes at `lib/src/services/`, decoupled from HTTP.
-
-**Available services:** `AuthService`, `UsersService`, `CollectionsService`, `DocumentsService`, `StorageService`, `SettingsService`, `LogsService`
-
-**ServiceContext:** Services receive dependencies via a record:
-```dart
-typedef ServiceContext = ({
-  AppDatabase database,
-  Environment env,
-  RealtimeEventBus? realtime,
-  HookExecutor? hooks,
-});
-```
-
-**Usage:**
-```dart
-final context = (database: db, env: env, realtime: realtime, hooks: hooks);
-final authService = AuthService(context);
-```
-
-**Adding a new service:**
-1. Create `lib/src/services/my_service.dart`
-2. Export from `lib/src/services/services.dart`
-3. Inject `ServiceContext` in constructor, access db via `context.database`
-
-### Code Generation
-
-| Command | What it generates |
-|---|---|
-| `dart run build_runner build` | `routes.dart` and `routes_info.dart` |
-| `dart run bin/vanestack.dart generate` | `../client/lib/src/client.dart` |
-
-After adding/modifying endpoints, run both. **Never edit generated files manually.**
-
-### Request Flow
-
-```
-Request → inject middleware (db, env, realtime, hooks) → cors → prettyLogger
-→ rateLimit → decodeJwt → Router → Handler → Response
-```
-
-
-#### The `@Route` Annotation
+Annotate top-level functions in `lib/src/endpoints/` — routes are auto-discovered:
 
 ```dart
-import 'package:vanestack/tools/route.dart';
-import 'package:vanestack/src/utils/http_method.dart';
-
 @Route(
-  path: '/v1/myfeature/<id>',       // path params use <name> syntax
-  method: HttpMethod.get,            // get, post, put, patch, delete, head, all
-  requireAuth: false,                // optional: reject unauthenticated requests
-  requireSuperUserAuth: false,       // optional: require admin privileges
-  ignoreForClient: false,            // optional: exclude from generated client SDK
+  path: '/v1/myfeature/<id>',  // <name> for path params
+  method: HttpMethod.get,       // get, post, put, patch, delete, head, all
+  requireAuth: false,           // optional
+  requireSuperUserAuth: false,  // optional
 )
-```
-
-#### Handler Function Signature
-
-```dart
-FutureOr<ReturnType> myHandler(
-  Request request,        // always first param
-  String id,              // path params come next (as Strings, matched by name)
-  String bodyField,       // remaining params are parsed from request body (POST/PATCH/PUT)
-  String? optionalField,  // nullable params are optional in the client
-) async { ... }
-```
-
-- For `GET`/`DELETE`: non-path params are parsed from query string
-- For `POST`/`PATCH`/`PUT`: non-path params are parsed from JSON body
-
-**Supported return types:** `FutureOr<T>` (JSON), `FutureOr<void>` (empty 200), `FutureOr<Response>` (raw Shelf), `FutureOr<FileResponse>` (binary), `Stream<T>` (SSE)
-
-**Supported parameter types:** `String`, `int`, `double`, `bool`, `DateTime` (ms since epoch), `List<T>`, `Map<String, Object?>`, enums, Mappable models
-
-#### Example Endpoint
-
-```dart
-@Route(path: '/v1/posts/<postId>', method: HttpMethod.get)
-FutureOr<Post> getPost(Request request, String postId) async {
+FutureOr<Post> myHandler(Request request, String id, String? optionalParam) async {
   final db = request.database;
-  // ... fetch and return post
-}
-
-@Route(path: '/v1/posts', method: HttpMethod.post, requireAuth: true)
-FutureOr<Post> createPost(Request request, String title, String body) async {
-  final db = request.database;
-  // ... create and return post
 }
 ```
 
-The client groups endpoints by the first path segment after `/v1/`:
-- `/v1/auth/sign-in` → `client.auth.signIn(...)`
-- `/v1/posts/<id>` → `client.posts.getPost(postId: '...')`
+- GET/DELETE: non-path params from query string; POST/PUT/PATCH: from JSON body
+- Nullable params are optional in the client
+- Return types: `FutureOr<T>` (JSON), `FutureOr<void>` (200), `FutureOr<Response>` (raw), `Stream<T>` (SSE)
+- Client grouping: `/v1/auth/sign-in` → `client.auth.signIn(...)`
+- **Never edit `routes.dart` or `routes_info.dart`** (auto-generated)
 
-### Dashboard (Jaspr)
+## Services Layer
 
-- Built with Jaspr 0.22 in client mode (JavaScript SPA)
-- Uses Riverpod for state, Jaspr Router for navigation
-- UI: Tailwind CSS + Basecoat components
-- In dev: run `jaspr serve --port 8079` in `dashboard/` and start the server with `--dev` flag to proxy to it
-- In prod: dashboard is embedded in the server binary (no separate process needed)
-
-#### Jaspr HTML Syntax
+Business logic in `lib/src/services/`. Services take a `ServiceContext` record:
 
 ```dart
-div(classes: 'flex gap-2', [
-  h1([Component.text('Title')]),
-  button(classes: 'btn btn-primary', [Component.text('Click')]),
-])
+typedef ServiceContext = ({AppDatabase database, Environment env, RealtimeEventBus? realtime, HookExecutor? hooks});
 ```
 
-#### Reactive Forms
+Available: `AuthService`, `UsersService`, `CollectionsService`, `DocumentsService`, `StorageService`, `SettingsService`, `LogsService`
 
-The dashboard has a reactive forms system in `lib/forms/reactive/` with path-based field access.
+To add: create file → export from `services.dart` → inject `ServiceContext`.
 
-**Core classes:** `Form`, `FormControl<T>`, `FormGroup`, `FormArray<T>`
-**UI components:** `FormBuilder`, `FormFieldBuilder<T>`
+## Database
+
+Drift ORM + SQLite. Tables in `lib/database/tables/`. Schema changes require `build_runner build`. File: `./data/database.sqlite`.
+
+## Dashboard (Jaspr)
+
+Jaspr 0.22 client-mode SPA. Riverpod state, Tailwind + Basecoat UI.
 
 ```dart
-final form = Form({
-  'email': FormControl<String>(initialValue: '', validators: [required(), email()]),
-  'password': FormControl<String>(initialValue: '', validators: [required()]),
-});
+div(classes: 'flex gap-2', [button(classes: 'btn', [Component.text('Click')])])
 ```
 
-**Path syntax:** `'email'`, `'address.street'`, `'items.[0]'`, `'items.[0].name'`
+Reactive forms in `lib/forms/reactive/` — `Form`, `FormControl<T>`, `FormGroup`, `FormArray<T>`. Path syntax: `'email'`, `'address.street'`, `'items.[0].name'`.
 
-### Database
+## Request Flow
 
-- Drift ORM with SQLite
-- Tables defined in `lib/database/tables/`
-- Schema changes require `dart run build_runner build`
-- Database file: `./data/database.sqlite`
-
-### Authentication
-
-- JWT-based (access + refresh tokens)
-- JWT decoded in middleware, available via request context
-- Auth endpoints in `lib/endpoints/auth/`
+`inject (db/env/realtime/hooks) → cors → prettyLogger → rateLimit → decodeJwt → Router → Handler`

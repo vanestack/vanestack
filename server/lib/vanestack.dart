@@ -36,7 +36,7 @@ export 'package:vanestack_common/vanestack_common.dart' show LogLevel;
 
 export 'src/realtime/realtime.dart' show Transport;
 export 'src/services/hooks.dart';
-export 'src/utils/env.dart' show Environment;
+export 'src/utils/env.dart' show Environment, DatabaseBackend;
 export 'src/utils/http_method.dart';
 export 'src/utils/logger.dart' show Logger;
 
@@ -62,7 +62,9 @@ class VaneStack {
     String localStoragePath = './data/storage',
     LogLevel logLevel = LogLevel.info,
     int maxFileSize = Environment.defaultMaxFileSize,
-    String databasePath = './data/database.sqlite',
+    DatabaseBackend databaseBackend = DatabaseBackend.sqlite,
+    String sqlitePath = './data/database.sqlite',
+    String? postgresUrl,
   }) {
     env = Environment.fromEnv(
       defaultPort: port,
@@ -71,7 +73,9 @@ class VaneStack {
       defaultLocalStoragePath: localStoragePath,
       defaultLogLevel: logLevel,
       defaultMaxFileSize: maxFileSize,
-      defaultDatabasePath: databasePath,
+      defaultDatabaseBackend: databaseBackend,
+      defaultSqlitePath: sqlitePath,
+      defaultPostgresUrl: postgresUrl,
     );
   }
 

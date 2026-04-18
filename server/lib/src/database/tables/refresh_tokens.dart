@@ -6,8 +6,8 @@ class RefreshTokens extends Table {
   TextColumn get refreshToken => text().unique()();
   TextColumn get accessToken => text()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get expiresAt => dateTime().withDefault(
-    currentDateAndTime.modify(DateTimeModifier.days(7)),
+  DateTimeColumn get expiresAt => dateTime().clientDefault(
+    () => DateTime.now().add(const Duration(days: 7)),
   )();
 
   @override

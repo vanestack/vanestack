@@ -267,36 +267,14 @@ class StorageService {
     final currentPath = path ?? '';
     final depth = currentPath.length + 1;
 
-    final query = db.files.select();
+    final variables = <Object?>[bucket, currentPath];
+    var whereSql =
+        '"bucket" = ? AND "path" NOT LIKE \'%.create_folder\' '
+        "AND \"path\" LIKE ? || '%' "
+        'AND substr("path", $depth) NOT LIKE \'%/%\'';
 
-    query.where(
-      (t) => Expression.and([
-        t.bucket.equals(bucket),
-        t.path.like('%.create_folder').not(),
-        t.path.like('$currentPath%'),
-        t.path.substr(depth).like('%/%').not(),
-      ]),
-    );
-
-    if (limit != null) {
-      query.limit(limit, offset: offset);
-    }
-
-    if (orderBy != null) {
-      final (_, clauses) = OrderClauseParser(orderBy).parse();
-
-      query.orderBy([
-        for (final clause in clauses)
-          (t) => OrderingTerm(
-            expression: t.columnsByName[clause.$1]!,
-            mode: clause.$2 == 'ASC' ? OrderingMode.asc : OrderingMode.desc,
-          ),
-      ]);
-    }
-
-    final variables = <Object?>[];
     if (filter != null) {
-      final (whereClause, paramValues) = FilterParser(
+      final (customWhere, paramValues) = FilterParser(
         filter,
         allowedFields: {
           'id',
@@ -307,22 +285,30 @@ class StorageService {
           'created_at',
         },
       ).parse();
-
-      if (whereClause.isNotEmpty) {
-        query.where((_) => CustomExpression<bool>(whereClause));
+      if (customWhere.isNotEmpty) {
+        whereSql += ' AND ($customWhere)';
         variables.addAll(paramValues);
       }
     }
 
-    final sqlQuery = query.constructQuery();
+    String orderClause = '';
+    if (orderBy != null) {
+      final (sql, _) = OrderClauseParser(orderBy).parse();
+      if (sql.isNotEmpty) orderClause = ' $sql';
+    }
+
+    String limitClause = '';
+    if (limit != null) {
+      limitClause = ' LIMIT ? OFFSET ?';
+      variables.addAll([limit, offset]);
+    }
 
     final files = await db
         .customSelect(
-          sqlQuery.sql,
-          variables: [
-            ...sqlQuery.introducedVariables,
-            ...variables.map((value) => Variable(value)),
-          ],
+          db.adaptPlaceholders(
+            'SELECT * FROM "_files" WHERE $whereSql$orderClause$limitClause',
+          ),
+          variables: [...variables.map((value) => Variable(value))],
         )
         .map((row) => db.files.map(row.data))
         .get();
@@ -771,8 +757,34 @@ class StorageService {
   }
 }
 
+class _InstrCall extends Expression<int> {
+  final Expression<String> haystack;
+  final Expression<String> needle;
+
+  _InstrCall(this.haystack, this.needle);
+
+  @override
+  void writeInto(GenerationContext context) {
+    if (context.dialect == SqlDialect.postgres) {
+      // STRPOS(haystack, needle) — same 1-based result as sqlite's INSTR,
+      // returns 0 when not found on both.
+      context.buffer.write('STRPOS(');
+      haystack.writeInto(context);
+      context.buffer.write(', ');
+      needle.writeInto(context);
+      context.buffer.write(')');
+    } else {
+      context.buffer.write('INSTR(');
+      haystack.writeInto(context);
+      context.buffer.write(', ');
+      needle.writeInto(context);
+      context.buffer.write(')');
+    }
+  }
+}
+
 extension _InstrExpression on Expression<String> {
   Expression<int> instrExpr(Expression<String> string) {
-    return FunctionCallExpression('INSTR', [this, string]);
+    return _InstrCall(this, string);
   }
 }

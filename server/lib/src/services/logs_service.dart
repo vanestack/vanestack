@@ -57,7 +57,9 @@ class LogsService {
 
     final result = await db
         .customSelect(
-          'SELECT * from _logs${whereClause ?? ''}$orderClause LIMIT ? OFFSET ?',
+          db.adaptPlaceholders(
+            'SELECT * from _logs${whereClause ?? ''}$orderClause LIMIT ? OFFSET ?',
+          ),
           variables: [
             ...?paramValues?.map((value) => Variable(value)),
             Variable<int>(limit),
@@ -68,7 +70,9 @@ class LogsService {
 
     final count = await db
         .customSelect(
-          'SELECT COUNT(*) as count from _logs${whereClause ?? ''}',
+          db.adaptPlaceholders(
+            'SELECT COUNT(*) as count from _logs${whereClause ?? ''}',
+          ),
           variables: [...?paramValues?.map((value) => Variable(value))],
         )
         .getSingle()

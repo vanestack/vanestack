@@ -5,8 +5,8 @@ class Otps extends Table {
   TextColumn get email => text()();
   TextColumn get otp => text()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get expiresAt => dateTime().withDefault(
-    currentDateAndTime.modify(DateTimeModifier.minutes(10)),
+  DateTimeColumn get expiresAt => dateTime().clientDefault(
+    () => DateTime.now().add(const Duration(minutes: 10)),
   )();
 
   @override

@@ -219,7 +219,9 @@ class RulesEngine {
 
     final result = await _database
         .customSelect(
-          'SELECT * from "$collection" WHERE id = ? LIMIT 1',
+          _database.adaptPlaceholders(
+            'SELECT * from "$collection" WHERE id = ? LIMIT 1',
+          ),
           variables: [Variable<String>(documentId)],
         )
         .getSingleOrNull();
@@ -245,7 +247,9 @@ class RulesEngine {
 
     final result = await _database
         .customSelect(
-          'SELECT * from "$collection" WHERE id = ? LIMIT 1',
+          _database.adaptPlaceholders(
+            'SELECT * from "$collection" WHERE id = ? LIMIT 1',
+          ),
           variables: [Variable<String>(documentId)],
         )
         .getSingleOrNull();

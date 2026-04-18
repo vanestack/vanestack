@@ -164,49 +164,44 @@ class UsersService {
     int limit = 10,
     int offset = 0,
   }) async {
-    final query = db.users.select();
-    var countQuery = db.users.selectOnly();
-    countQuery.addColumns([db.users.id.count()]);
-
-    query.limit(limit, offset: offset);
-
-    if (orderBy != null) {
-      final (_, clauses) = OrderClauseParser(orderBy).parse();
-
-      query.orderBy([
-        for (final clause in clauses)
-          (t) => OrderingTerm(
-            expression: t.columnsByName[clause.$1]!,
-            mode: clause.$2 == 'ASC' ? OrderingMode.asc : OrderingMode.desc,
-          ),
-      ]);
-    }
-
+    String whereClause = '';
     final variables = <Object?>[];
     if (filter != null) {
-      final (whereClause, paramValues) = FilterParser(filter).parse();
-      if (whereClause.isNotEmpty) {
-        query.where((_) => CustomExpression<bool>(whereClause));
-        countQuery.where(CustomExpression<bool>(whereClause));
-
+      final (where, paramValues) = FilterParser(filter).parse();
+      if (where.isNotEmpty) {
+        whereClause = ' WHERE $where';
         variables.addAll(paramValues);
       }
     }
 
+    String orderClause = '';
+    if (orderBy != null) {
+      final (sql, _) = OrderClauseParser(orderBy).parse();
+      if (sql.isNotEmpty) orderClause = ' $sql';
+    }
+
     final users = await db
         .customSelect(
-          query.constructQuery().sql,
-          variables: [...variables.map((value) => Variable(value))],
+          db.adaptPlaceholders(
+            'SELECT * FROM "_users"$whereClause$orderClause LIMIT ? OFFSET ?',
+          ),
+          variables: [
+            ...variables.map((value) => Variable(value)),
+            Variable<int>(limit),
+            Variable<int>(offset),
+          ],
         )
         .map((row) => db.users.map(row.data))
         .get();
 
     final count = await db
         .customSelect(
-          countQuery.constructQuery().sql,
+          db.adaptPlaceholders(
+            'SELECT COUNT(*) AS c FROM "_users"$whereClause',
+          ),
           variables: [...variables.map((value) => Variable(value))],
         )
-        .map((row) => row.read<int>('c0'))
+        .map((row) => row.read<int>('c'))
         .getSingle();
 
     final userIds = users.map((e) => e.id).toList();

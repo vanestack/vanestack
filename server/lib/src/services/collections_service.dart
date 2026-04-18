@@ -28,6 +28,37 @@ class CollectionsService {
 
   AppDatabase get db => context.database;
 
+  // ==================== Dialect helpers ====================
+
+  bool get _isPostgres => db.executor.dialect == SqlDialect.postgres;
+
+  /// SQL expression returning the current unix epoch (seconds) as an integer.
+  String get _nowEpochSql =>
+      _isPostgres ? 'EXTRACT(EPOCH FROM now())::bigint' : 'unixepoch()';
+
+  /// SQL expression returning a freshly generated UUIDv7 string.
+  ///
+  /// `random_uuid_v7()` is registered by [AppDatabase.setup] on sqlite and
+  /// installed as a plpgsql helper on postgres in the migration, so both
+  /// backends accept the same expression.
+  String get _uuidDefaultSql => 'random_uuid_v7()';
+
+  /// Translates sqlite-flavored default expressions stored in collection
+  /// metadata into their postgres equivalent. No-op on sqlite.
+  ///
+  /// `random_uuid_v7()` is a no-op because the same function exists on
+  /// both backends; only `unixepoch()` needs rewriting.
+  String _translateDefaultExpr(String value) {
+    if (!_isPostgres) return value;
+    return value.replaceAll(
+      'unixepoch()',
+      'EXTRACT(EPOCH FROM now())::bigint',
+    );
+  }
+
+  /// Dialect-specific epoch-seconds column type for timestamps.
+  String get _epochIntType => _isPostgres ? 'BIGINT' : 'INTEGER';
+
   // ==================== Read Operations ====================
 
   /// Gets a collection by name.
@@ -191,7 +222,7 @@ class CollectionsService {
     // Wrap all DDL operations in a transaction for atomicity
     final result = await db.transaction(() async {
       await db.customStatement(createTableSQL);
-      await db.customStatement(_buildTriggersSQL(name));
+      await _createTriggers(name);
 
       // Create indexes if provided
       if (indexes.isNotEmpty) {
@@ -436,11 +467,9 @@ class CollectionsService {
     // Wrap all operations in a transaction for atomicity
     return await db.transaction(() async {
       if (newName != null && newName != name) {
-        await db.customStatement(
-          'DROP TRIGGER IF EXISTS "${name}_update_timestamp";',
-        );
+        await _dropTriggers(name);
         await db.customStatement('ALTER TABLE "$name" RENAME TO "$newName"');
-        await db.customStatement(_buildTriggersSQL(newName));
+        await _createTriggers(newName);
       }
 
       final effectiveTableName = newName ?? name;
@@ -495,7 +524,7 @@ class CollectionsService {
         await _updateIndexes(effectiveTableName, existingIndexes, indexes);
       }
 
-      await db.customStatement(_buildTriggersSQL(effectiveTableName));
+      await _createTriggers(effectiveTableName);
 
       await db.managers.collections
           .filter((t) => t.name.equals(name))
@@ -750,9 +779,7 @@ class CollectionsService {
         await db.customStatement('DROP VIEW "$name"');
       } else {
         // Drop the trigger and table for base collections
-        await db.customStatement(
-          'DROP TRIGGER IF EXISTS "${name}_update_timestamp";',
-        );
+        await _dropTriggers(name);
         await db.customStatement('DROP TABLE "$name"');
       }
 
@@ -947,9 +974,11 @@ class CollectionsService {
           newDoc,
         );
 
-        await db.customInsert(
-          'INSERT INTO "$collectionName" (${encodedData.keys.map((k) => '"$k"').join(', ')}) VALUES (${List.filled(encodedData.length, '?').join(', ')})',
-          variables: [...encodedData.values.map((value) => Variable(value))],
+        await db.customStatement(
+          db.adaptPlaceholders(
+            'INSERT INTO "$collectionName" (${encodedData.keys.map((k) => '"$k"').join(', ')}) VALUES (${List.filled(encodedData.length, '?').join(', ')})',
+          ),
+          [...encodedData.values],
         );
 
         createdCount++;
@@ -1032,20 +1061,52 @@ class CollectionsService {
     String viewName,
     String viewQuery,
   ) async {
-    final result = await db
-        .customSelect('PRAGMA table_info("$viewName")')
-        .get();
+    final List<({String name, String type, bool nullable})> rows;
+
+    if (_isPostgres) {
+      final result = await db.customSelect(
+        r'''
+SELECT
+  column_name AS name,
+  data_type AS type,
+  CASE WHEN is_nullable = 'NO' THEN 1 ELSE 0 END AS notnull
+FROM information_schema.columns
+WHERE table_schema = current_schema() AND table_name = $1
+ORDER BY ordinal_position
+''',
+        variables: [Variable.withString(viewName)],
+      ).get();
+      rows = [
+        for (final row in result)
+          (
+            name: row.read<String>('name'),
+            type: row.read<String>('type').toUpperCase(),
+            nullable: row.read<int>('notnull') == 0,
+          ),
+      ];
+    } else {
+      final result = await db
+          .customSelect('PRAGMA table_info("$viewName")')
+          .get();
+      rows = [
+        for (final row in result)
+          (
+            name: row.read<String>('name'),
+            type: row.read<String>('type').toUpperCase(),
+            nullable: row.read<int>('notnull') == 0,
+          ),
+      ];
+    }
 
     // Try to resolve semantic types from the base collection
     final baseAttrMap = await _resolveBaseAttributes(viewQuery);
 
     final attributes = <Attribute>[];
 
-    for (final row in result) {
-      final name = row.read<String>('name');
-      final type = row.read<String>('type').toUpperCase();
-      final notNull = row.read<int>('notnull') == 1;
-      final nullable = !notNull;
+    for (final row in rows) {
+      final name = row.name;
+      final type = row.type;
+      final nullable = row.nullable;
 
       // If the base collection has this column, use its semantic type
       final baseAttr = baseAttrMap[name];
@@ -1060,7 +1121,7 @@ class CollectionsService {
         };
         attributes.add(attribute);
       } else {
-        attributes.add(_sqliteTypeToAttribute(name, type, nullable));
+        attributes.add(_sqlTypeToAttribute(name, type, nullable));
       }
     }
 
@@ -1095,7 +1156,7 @@ class CollectionsService {
     return attrMap;
   }
 
-  Attribute _sqliteTypeToAttribute(String name, String sqlType, bool nullable) {
+  Attribute _sqlTypeToAttribute(String name, String sqlType, bool nullable) {
     if (sqlType.contains('INT')) {
       return IntAttribute(name: name, nullable: nullable);
     } else if (sqlType.contains('CHAR') ||
@@ -1106,7 +1167,9 @@ class CollectionsService {
       return TextAttribute(name: name, nullable: nullable);
     } else if (sqlType.contains('REAL') ||
         sqlType.contains('FLOA') ||
-        sqlType.contains('DOUB')) {
+        sqlType.contains('DOUB') ||
+        sqlType.contains('NUMERIC') ||
+        sqlType.contains('DECIMAL')) {
       return DoubleAttribute(name: name, nullable: nullable);
     } else {
       return TextAttribute(name: name, nullable: nullable);
@@ -1137,8 +1200,34 @@ class CollectionsService {
     return dependentViews;
   }
 
-  String _buildTriggersSQL(String tableName) {
-    return '''
+  /// DDL statements that install the `updated_at`-maintaining trigger.
+  ///
+  /// Returns multiple statements on postgres (function + trigger) and a
+  /// single `CREATE TRIGGER` on sqlite.
+  List<String> _createTriggersSQL(String tableName) {
+    if (_isPostgres) {
+      final fn = '${tableName}_set_updated_at';
+      final trig = '${tableName}_update_timestamp';
+      return [
+        '''
+CREATE OR REPLACE FUNCTION "$fn"() RETURNS trigger AS \$\$
+BEGIN
+  NEW.updated_at := EXTRACT(EPOCH FROM now())::bigint;
+  RETURN NEW;
+END;
+\$\$ LANGUAGE plpgsql;
+''',
+        'DROP TRIGGER IF EXISTS "$trig" ON "$tableName"',
+        '''
+CREATE TRIGGER "$trig"
+BEFORE UPDATE ON "$tableName"
+FOR EACH ROW
+EXECUTE FUNCTION "$fn"();
+''',
+      ];
+    }
+    return [
+      '''
       CREATE TRIGGER IF NOT EXISTS "${tableName}_update_timestamp"
       AFTER UPDATE ON "$tableName"
       FOR EACH ROW
@@ -1147,7 +1236,31 @@ class CollectionsService {
         SET updated_at = unixepoch()
         WHERE rowid = NEW.rowid;
       END;
-    ''';
+    ''',
+    ];
+  }
+
+  /// Runs [_createTriggersSQL] against the current database.
+  Future<void> _createTriggers(String tableName) async {
+    for (final stmt in _createTriggersSQL(tableName)) {
+      await db.customStatement(stmt);
+    }
+  }
+
+  /// Drops the `updated_at` trigger (and its backing function on postgres).
+  Future<void> _dropTriggers(String tableName) async {
+    if (_isPostgres) {
+      final fn = '${tableName}_set_updated_at';
+      final trig = '${tableName}_update_timestamp';
+      await db.customStatement(
+        'DROP TRIGGER IF EXISTS "$trig" ON "$tableName"',
+      );
+      await db.customStatement('DROP FUNCTION IF EXISTS "$fn"()');
+    } else {
+      await db.customStatement(
+        'DROP TRIGGER IF EXISTS "${tableName}_update_timestamp"',
+      );
+    }
   }
 
   static const _validForeignKeyActions = {
@@ -1214,16 +1327,20 @@ class CollectionsService {
 
     if (!hasId) {
       columnDefs.add(
-        '"id" TEXT NOT NULL PRIMARY KEY DEFAULT (random_uuid_v7())',
+        '"id" TEXT NOT NULL PRIMARY KEY DEFAULT ($_uuidDefaultSql)',
       );
     }
 
     if (!hasCreatedAt) {
-      columnDefs.add('"created_at" INTEGER NOT NULL DEFAULT (unixepoch())');
+      columnDefs.add(
+        '"created_at" $_epochIntType NOT NULL DEFAULT ($_nowEpochSql)',
+      );
     }
 
     if (!hasUpdatedAt) {
-      columnDefs.add('"updated_at" INTEGER NOT NULL DEFAULT (unixepoch())');
+      columnDefs.add(
+        '"updated_at" $_epochIntType NOT NULL DEFAULT ($_nowEpochSql)',
+      );
     }
 
     for (final col in columns) {
@@ -1260,7 +1377,7 @@ class CollectionsService {
             !defaultValue.endsWith(')')) {
           parts.add("DEFAULT '${_escapeDefaultValue(defaultValue)}'");
         } else {
-          parts.add('DEFAULT $defaultValue');
+          parts.add('DEFAULT ${_translateDefaultExpr(defaultValue.toString())}');
         }
       }
 
@@ -1334,6 +1451,16 @@ class CollectionsService {
   }
 
   String _sqlType(Attribute attribute) {
+    if (_isPostgres) {
+      return switch (attribute) {
+        TextAttribute() => 'TEXT',
+        IntAttribute() => 'BIGINT',
+        DoubleAttribute() => 'DOUBLE PRECISION',
+        BoolAttribute() => 'SMALLINT',
+        DateAttribute() => 'BIGINT',
+        JsonAttribute() => 'TEXT',
+      };
+    }
     return switch (attribute) {
       TextAttribute() => 'TEXT',
       IntAttribute() => 'INTEGER',
@@ -1345,6 +1472,19 @@ class CollectionsService {
   }
 
   Future<bool> _tableExists(String tableName) async {
+    if (_isPostgres) {
+      final result = await db
+          .customSelect(
+            "SELECT 1 AS found FROM pg_class c "
+            "JOIN pg_namespace n ON n.oid = c.relnamespace "
+            "WHERE n.nspname = current_schema() "
+            r"AND c.relname = $1 "
+            "AND c.relkind IN ('r', 'v', 'm')",
+            variables: [Variable.withString(tableName)],
+          )
+          .get();
+      return result.isNotEmpty;
+    }
     final result = await db
         .customSelect(
           "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
@@ -1355,6 +1495,49 @@ class CollectionsService {
   }
 
   Future<Map<String, _ColumnInfo>> _getTableColumns(String tableName) async {
+    if (_isPostgres) {
+      final result = await db.customSelect(
+        r'''
+SELECT
+  c.column_name AS name,
+  c.data_type AS type,
+  CASE WHEN c.is_nullable = 'NO' THEN 1 ELSE 0 END AS notnull,
+  c.column_default AS dflt_value,
+  CASE WHEN pk.column_name IS NOT NULL THEN 1 ELSE 0 END AS pk
+FROM information_schema.columns c
+LEFT JOIN (
+  SELECT kcu.column_name
+  FROM information_schema.table_constraints tc
+  JOIN information_schema.key_column_usage kcu
+    ON tc.constraint_name = kcu.constraint_name
+    AND tc.table_schema = kcu.table_schema
+  WHERE tc.table_schema = current_schema()
+    AND tc.table_name = $1
+    AND tc.constraint_type = 'PRIMARY KEY'
+) pk ON pk.column_name = c.column_name
+WHERE c.table_schema = current_schema() AND c.table_name = $2
+ORDER BY c.ordinal_position
+''',
+        variables: [
+          Variable.withString(tableName),
+          Variable.withString(tableName),
+        ],
+      ).get();
+
+      final columns = <String, _ColumnInfo>{};
+      for (final row in result) {
+        final name = row.read<String>('name');
+        columns[name] = _ColumnInfo(
+          name: name,
+          type: row.read<String>('type'),
+          notNull: row.read<int>('notnull') == 1,
+          defaultValue: row.read<String?>('dflt_value'),
+          primaryKey: row.read<int>('pk') > 0,
+        );
+      }
+      return columns;
+    }
+
     final result = await db
         .customSelect('PRAGMA table_info("$tableName")')
         .get();
@@ -1375,6 +1558,46 @@ class CollectionsService {
   }
 
   Future<Map<String, _IndexInfo>> _getTableIndexes(String tableName) async {
+    if (_isPostgres) {
+      final result = await db.customSelect(
+        r'''
+SELECT
+  ic.relname AS index_name,
+  ix.indisunique AS is_unique,
+  a.attname AS column_name,
+  array_position(ix.indkey, a.attnum) AS col_position
+FROM pg_class t
+JOIN pg_namespace n ON n.oid = t.relnamespace
+JOIN pg_index ix ON t.oid = ix.indrelid
+JOIN pg_class ic ON ic.oid = ix.indexrelid
+JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
+WHERE n.nspname = current_schema()
+  AND t.relname = $1
+  AND NOT ix.indisprimary
+ORDER BY ic.relname, col_position
+''',
+        variables: [Variable.withString(tableName)],
+      ).get();
+
+      final indexes = <String, _IndexInfo>{};
+      for (final row in result) {
+        final indexName = row.read<String>('index_name');
+        final unique = row.read<bool>('is_unique');
+        final columnName = row.read<String>('column_name');
+        final existing = indexes[indexName];
+        if (existing == null) {
+          indexes[indexName] = _IndexInfo(
+            name: indexName,
+            columns: [columnName],
+            unique: unique,
+          );
+        } else {
+          existing.columns.add(columnName);
+        }
+      }
+      return indexes;
+    }
+
     final result = await db
         .customSelect('PRAGMA index_list("$tableName")')
         .get();
@@ -1516,6 +1739,14 @@ class CollectionsService {
       return true;
     }
 
+    // System-column defaults are managed per-dialect, so skip comparing their
+    // raw string forms — postgres introspection yields a very different
+    // representation than the sqlite-flavored value stored in attribute metadata.
+    const systemColumns = {'id', 'created_at', 'updated_at'};
+    if (systemColumns.contains(newCol.name)) {
+      return false;
+    }
+
     // Check default value changes
     final existingDefault = existing.defaultValue;
     final newDefault = newCol.defaultValue?.toString();
@@ -1527,7 +1758,9 @@ class CollectionsService {
     if (existingDefault != null && newDefault != null) {
       // Normalize: SQLite may store 'value' while we have value
       final normalizedExisting = existingDefault.replaceAll("'", '');
-      final normalizedNew = newDefault.replaceAll("'", '');
+      final normalizedNew = _translateDefaultExpr(
+        newDefault.replaceAll("'", ''),
+      );
       if (normalizedExisting != normalizedNew) {
         return true;
       }
@@ -1672,7 +1905,7 @@ class CollectionsService {
             !defaultValue.endsWith(')')) {
           parts.add("DEFAULT '${_escapeDefaultValue(defaultValue)}'");
         } else {
-          parts.add('DEFAULT $defaultValue');
+          parts.add('DEFAULT ${_translateDefaultExpr(defaultValue.toString())}');
         }
       }
 
@@ -1758,7 +1991,7 @@ class CollectionsService {
     );
 
     await db.customStatement(createTableSQL);
-    await db.customStatement(_buildTriggersSQL(collection.name));
+    await _createTriggers(collection.name);
 
     if (collection.indexes.isNotEmpty) {
       for (final index in collection.indexes) {
@@ -1815,9 +2048,7 @@ class CollectionsService {
       _validateIndexColumns(index, collection.attributes);
     }
 
-    await db.customStatement(
-      'DROP TRIGGER IF EXISTS "${collection.name}_update_timestamp";',
-    );
+    await _dropTriggers(collection.name);
     await db.customStatement('DROP TABLE IF EXISTS "${collection.name}"');
 
     final createTableSQL = _buildCreateTableSQL(
@@ -1826,7 +2057,7 @@ class CollectionsService {
     );
 
     await db.customStatement(createTableSQL);
-    await db.customStatement(_buildTriggersSQL(collection.name));
+    await _createTriggers(collection.name);
 
     if (collection.indexes.isNotEmpty) {
       for (final index in collection.indexes) {

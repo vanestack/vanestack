@@ -1,0 +1,6 @@
+tags:
+  postgres:
+    description: >
+      Integration tests that require a reachable postgres instance. Set
+      VANESTACK_TEST_POSTGRES_URL to a disposable postgres URL to run them;
+      otherwise they are skipped.

@@ -466,15 +466,14 @@ void main() {
           ),
         );
 
-        // Expired OTPs are cleaned up before lookup, so the error is "Invalid OTP"
+        // The service distinguishes expired from invalid so the client can
+        // prompt the user to request a new code rather than re-check typing.
         expect(
           () => authService.verifyOtp(email: 'otp@example.com', otp: '123456'),
           throwsA(
-            isA<VaneStackException>().having(
-              (e) => e.message,
-              'message',
-              contains('Invalid OTP'),
-            ),
+            isA<VaneStackException>()
+                .having((e) => e.message, 'message', contains('expired'))
+                .having((e) => e.code, 'code', AuthErrorCode.expiredOtp),
           ),
         );
       });

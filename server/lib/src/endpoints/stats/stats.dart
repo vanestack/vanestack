@@ -89,7 +89,10 @@ FutureOr<DashboardStats> stats(Request request) async {
   // Requests per day for last 7 days
   final sevenDaysAgo = todayStart.subtract(const Duration(days: 6));
 
-  final day = db.logs.createdAt.date;
+  // Dialect-aware "YYYY-MM-DD" derived from the epoch-seconds timestamp.
+  // Drift's `.date` getter renders as sqlite's `DATE(col, 'unixepoch')`,
+  // which postgres doesn't understand.
+  final day = _EpochDateString(db.logs.createdAt);
   final cnt = db.logs.id.count();
   final perDayRows =
       await (db.logs.selectOnly()
@@ -131,4 +134,32 @@ FutureOr<DashboardStats> stats(Request request) async {
     statusBreakdown: statusBreakdown,
     requestsPerDay: requestsPerDay,
   );
+}
+
+/// Renders a `YYYY-MM-DD` string from an epoch-seconds datetime column, using
+/// dialect-appropriate SQL.
+///
+/// Drift's built-in `DateTimeExpressions.date` getter produces
+/// `DATE(col, 'unixepoch')`, which only sqlite understands. On postgres we
+/// go through `to_timestamp(col)` and `to_char(..., 'YYYY-MM-DD')`.
+class _EpochDateString extends Expression<String> {
+  final Expression<DateTime> _col;
+
+  const _EpochDateString(this._col);
+
+  @override
+  Precedence get precedence => Precedence.primary;
+
+  @override
+  void writeInto(GenerationContext context) {
+    if (context.dialect == SqlDialect.postgres) {
+      context.buffer.write('to_char(to_timestamp(');
+      _col.writeInto(context);
+      context.buffer.write("), 'YYYY-MM-DD')");
+    } else {
+      context.buffer.write('DATE(');
+      _col.writeInto(context);
+      context.buffer.write(", 'unixepoch')");
+    }
+  }
 }

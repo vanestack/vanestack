@@ -46,9 +46,10 @@ class $UsersTable extends Users with TableInfo<$UsersTable, DbUser> {
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("super_user" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
+      SqlDialect.sqlite: 'CHECK ("super_user" IN (0, 1))',
+      SqlDialect.postgres: '',
+    }),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _passwordHashMeta = const VerificationMeta(
@@ -538,9 +539,7 @@ class $RefreshTokensTable extends RefreshTokens
     false,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
-    defaultValue: DateTimeExpressions(
-      currentDateAndTime,
-    ).modify(DateTimeModifier.days(7)),
+    clientDefault: () => DateTime.now().add(const Duration(days: 7)),
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -931,9 +930,7 @@ class $ResetPasswordTokensTable extends ResetPasswordTokens
     false,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
-    defaultValue: DateTimeExpressions(
-      currentDateAndTime,
-    ).modify(DateTimeModifier.minutes(30)),
+    clientDefault: () => DateTime.now().add(const Duration(minutes: 30)),
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -2771,9 +2768,7 @@ class $OtpsTable extends Otps with TableInfo<$OtpsTable, Otp> {
     false,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
-    defaultValue: DateTimeExpressions(
-      currentDateAndTime,
-    ).modify(DateTimeModifier.minutes(10)),
+    clientDefault: () => DateTime.now().add(const Duration(minutes: 10)),
   );
   @override
   List<GeneratedColumn> get $columns => [id, email, otp, createdAt, expiresAt];
@@ -3095,9 +3090,10 @@ class $FilesTable extends Files with TableInfo<$FilesTable, DbFile> {
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_local" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
+      SqlDialect.sqlite: 'CHECK ("is_local" IN (0, 1))',
+      SqlDialect.postgres: '',
+    }),
   );
   static const VerificationMeta _sizeMeta = const VerificationMeta('size');
   @override
@@ -4086,9 +4082,7 @@ class $OauthStatesTable extends OauthStates
     false,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
-    defaultValue: DateTimeExpressions(
-      currentDateAndTime,
-    ).modify(DateTimeModifier.minutes(10)),
+    clientDefault: () => DateTime.now().add(const Duration(minutes: 10)),
   );
   @override
   List<GeneratedColumn> get $columns => [

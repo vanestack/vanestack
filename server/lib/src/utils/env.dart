@@ -2,6 +2,9 @@ import 'dart:io' show Platform;
 
 import 'package:vanestack_common/vanestack_common.dart' show LogLevel;
 
+/// Which database backend the server talks to.
+enum DatabaseBackend { sqlite, postgres }
+
 /// Environment configuration for the VaneStack server.
 ///
 /// Configuration can be set via environment variables:
@@ -11,7 +14,10 @@ import 'package:vanestack_common/vanestack_common.dart' show LogLevel;
 /// - `VANESTACK_LOCAL_STORAGE_PATH`: Local file storage folder path (default: 'storage')
 /// - `VANESTACK_LOG_LEVEL`: Log level (default: info)
 /// - `VANESTACK_MAX_FILE_SIZE`: Maximum file upload size in bytes (default: 50MB)
-/// - `VANESTACK_DATABASE_PATH`: SQLite database file path (default: './database.sqlite')
+/// - `VANESTACK_DATABASE`: Database backend — `sqlite` (default) or `postgres`
+/// - `VANESTACK_SQLITE_PATH`: SQLite database file path (default: './data/database.sqlite')
+/// - `VANESTACK_POSTGRES_URL`: Postgres connection URL (e.g. `postgres://user:pass@host:5432/db`).
+///   Required when `VANESTACK_DATABASE=postgres`.
 /// - `VANESTACK_RATE_LIMIT_MAX`: Max requests per window for rate limiting (default: 10)
 /// - `VANESTACK_RATE_LIMIT_WINDOW_SECONDS`: Rate limit window in seconds (default: 60)
 /// - `VANESTACK_LOG_RETENTION_DAYS`: Days to retain logs, 0 = no cleanup (default: 30)
@@ -47,10 +53,27 @@ class Environment {
   /// Defaults to 50MB (50 * 1024 * 1024 bytes).
   final int maxFileSize;
 
+  /// Which database backend to use.
+  /// Can be set via `VANESTACK_DATABASE` environment variable.
+  /// Defaults to [DatabaseBackend.sqlite].
+  final DatabaseBackend databaseBackend;
+
   /// The path to the SQLite database file.
-  /// Can be set via `VANESTACK_DATABASE_PATH` environment variable.
+  /// Can be set via `VANESTACK_SQLITE_PATH` environment variable.
   /// Defaults to './data/database.sqlite'.
-  final String databasePath;
+  ///
+  /// Only used when [databaseBackend] is [DatabaseBackend.sqlite].
+  final String sqlitePath;
+
+  /// Postgres connection URL (e.g. `postgres://user:pass@host:5432/db`).
+  ///
+  /// Can be set via `VANESTACK_POSTGRES_URL` environment variable.
+  /// Required when [databaseBackend] is [DatabaseBackend.postgres].
+  ///
+  /// Supports schemes `postgres://` and `postgresql://`. An optional
+  /// `sslmode=` query parameter controls TLS:
+  /// `disable`, `require` (default), or `verify-full`.
+  final String? postgresUrl;
 
   /// Maximum requests per rate limit window.
   /// Can be set via `VANESTACK_RATE_LIMIT_MAX` environment variable.
@@ -76,7 +99,9 @@ class Environment {
     this.localStoragePath = './data/storage',
     this.logLevel = LogLevel.info,
     this.maxFileSize = defaultMaxFileSize,
-    this.databasePath = './data/database.sqlite',
+    this.databaseBackend = DatabaseBackend.sqlite,
+    this.sqlitePath = './data/database.sqlite',
+    this.postgresUrl,
     this.rateLimitMax = 10,
     this.rateLimitWindowSeconds = 60,
     this.logRetentionDays = 30,
@@ -92,7 +117,9 @@ class Environment {
     String? defaultLocalStoragePath,
     LogLevel? defaultLogLevel,
     int? defaultMaxFileSize,
-    String? defaultDatabasePath,
+    DatabaseBackend? defaultDatabaseBackend,
+    String? defaultSqlitePath,
+    String? defaultPostgresUrl,
     int? defaultRateLimitMax,
     int? defaultRateLimitWindowSeconds,
     int? defaultLogRetentionDays,
@@ -105,12 +132,25 @@ class Environment {
         Platform.environment['VANESTACK_LOCAL_STORAGE_PATH'];
     final envLogLevel = Platform.environment['VANESTACK_LOG_LEVEL'];
     final envMaxFileSize = Platform.environment['VANESTACK_MAX_FILE_SIZE'];
-    final envDatabasePath = Platform.environment['VANESTACK_DATABASE_PATH'];
+    final envDatabase = Platform.environment['VANESTACK_DATABASE'];
+    final envSqlitePath = Platform.environment['VANESTACK_SQLITE_PATH'];
+    final envPostgresUrl = Platform.environment['VANESTACK_POSTGRES_URL'];
     final envRateLimitMax = Platform.environment['VANESTACK_RATE_LIMIT_MAX'];
     final envRateLimitWindow =
         Platform.environment['VANESTACK_RATE_LIMIT_WINDOW_SECONDS'];
     final envLogRetention =
         Platform.environment['VANESTACK_LOG_RETENTION_DAYS'];
+
+    final backend = switch (envDatabase?.toLowerCase()) {
+      'postgres' || 'postgresql' => DatabaseBackend.postgres,
+      'sqlite' => DatabaseBackend.sqlite,
+      null => defaultDatabaseBackend ?? DatabaseBackend.sqlite,
+      final other => throw ArgumentError.value(
+          other,
+          'VANESTACK_DATABASE',
+          'Expected "sqlite" or "postgres".',
+        ),
+    };
 
     return Environment(
       port: envPort != null
@@ -135,8 +175,10 @@ class Environment {
                 defaultMaxFileSize ??
                 Environment.defaultMaxFileSize
           : defaultMaxFileSize ?? Environment.defaultMaxFileSize,
-      databasePath:
-          envDatabasePath ?? defaultDatabasePath ?? './data/database.sqlite',
+      databaseBackend: backend,
+      sqlitePath:
+          envSqlitePath ?? defaultSqlitePath ?? './data/database.sqlite',
+      postgresUrl: envPostgresUrl ?? defaultPostgresUrl,
       rateLimitMax: envRateLimitMax != null
           ? int.tryParse(envRateLimitMax) ?? defaultRateLimitMax ?? 10
           : defaultRateLimitMax ?? 10,

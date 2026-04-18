@@ -6,8 +6,8 @@ class OauthStates extends Table {
   TextColumn get provider => text()();
   TextColumn get redirectUrl => text()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get expiresAt => dateTime().withDefault(
-    currentDateAndTime.modify(DateTimeModifier.minutes(10)),
+  DateTimeColumn get expiresAt => dateTime().clientDefault(
+    () => DateTime.now().add(const Duration(minutes: 10)),
   )();
 
   @override

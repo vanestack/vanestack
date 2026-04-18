@@ -66,9 +66,10 @@ void main() {
       );
 
       expect(res.status, 400);
+      expect(res.json?['error']['message'], contains('disabled'));
       expect(
-        res.json?['error']['message'],
-        contains('not configured or disabled'),
+        res.json?['error']['code'],
+        AuthErrorCode.providerDisabled.value,
       );
     });
 

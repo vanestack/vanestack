@@ -31,7 +31,7 @@ class VaneStackServer {
   late HttpServer? _httpServer;
   Timer? _logCleanupTimer;
 
-  late final AppDatabase database = AppDatabase(null, env.databasePath);
+  late final AppDatabase database = AppDatabase.fromEnv(env);
 
   final Environment env;
 

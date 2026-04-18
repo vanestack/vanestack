@@ -40,7 +40,7 @@ class StorageCommand extends Command {
 
 ServiceContext _createContext(Environment env) {
   return (
-    database: AppDatabase(null, env.databasePath),
+    database: AppDatabase.fromEnv(env),
     env: env,
     realtime: null,
     hooks: null,

@@ -103,9 +103,11 @@ class DocumentsService {
 
     final encodedData = CollectionUtils.documentToRow(baseCollection, newDoc);
 
-    await db.customInsert(
-      'INSERT INTO "$collectionName" (${encodedData.keys.map((k) => '"$k"').join(', ')}) VALUES (${List.filled(encodedData.length, '?').join(', ')}) RETURNING *',
-      variables: [...encodedData.values.map((value) => Variable(value))],
+    await db.customStatement(
+      db.adaptPlaceholders(
+        'INSERT INTO "$collectionName" (${encodedData.keys.map((k) => '"$k"').join(', ')}) VALUES (${List.filled(encodedData.length, '?').join(', ')})',
+      ),
+      [...encodedData.values],
     );
 
     if (emitEvent && realtime != null) {
@@ -169,7 +171,9 @@ class DocumentsService {
 
     final row = await db
         .customSelect(
-          'SELECT * from "$collectionName" WHERE id = ? LIMIT 1',
+          db.adaptPlaceholders(
+            'SELECT * from "$collectionName" WHERE id = ? LIMIT 1',
+          ),
           variables: [Variable<String>(documentId)],
         )
         .getSingleOrNull();
@@ -237,7 +241,9 @@ class DocumentsService {
 
     final result = await db
         .customSelect(
-          'SELECT * from "$collectionName"${whereClause ?? ''}${orderClause ?? ''} LIMIT ? OFFSET ?',
+          db.adaptPlaceholders(
+            'SELECT * from "$collectionName"${whereClause ?? ''}${orderClause ?? ''} LIMIT ? OFFSET ?',
+          ),
           variables: [
             ...?paramValues?.map((value) => Variable(value)),
             Variable<int>(limit),
@@ -248,7 +254,9 @@ class DocumentsService {
 
     final count = await db
         .customSelect(
-          'SELECT COUNT(*) as count from "$collectionName"${whereClause ?? ''}',
+          db.adaptPlaceholders(
+            'SELECT COUNT(*) as count from "$collectionName"${whereClause ?? ''}',
+          ),
           variables: [...?paramValues?.map((value) => Variable(value))],
         )
         .getSingle()
@@ -311,7 +319,9 @@ class DocumentsService {
 
     final existingDoc = await db
         .customSelect(
-          'SELECT * from "$collectionName" WHERE id = ?',
+          db.adaptPlaceholders(
+            'SELECT * from "$collectionName" WHERE id = ?',
+          ),
           variables: [Variable<String>(documentId)],
         )
         .getSingleOrNull();
@@ -349,12 +359,11 @@ class DocumentsService {
 
     final encodedData = CollectionUtils.documentToRow(baseCollection, newDoc);
 
-    await db.customWriteReturning(
-      'UPDATE "$collectionName" SET ${encodedData.keys.map((k) => '"$k" = ?').join(', ')} WHERE "id" = ? RETURNING *',
-      variables: [
-        ...encodedData.values.map((value) => Variable(value)),
-        Variable<String>(documentId),
-      ],
+    await db.customStatement(
+      db.adaptPlaceholders(
+        'UPDATE "$collectionName" SET ${encodedData.keys.map((k) => '"$k" = ?').join(', ')} WHERE "id" = ?',
+      ),
+      [...encodedData.values, documentId],
     );
 
     if (emitEvent && realtime != null) {
@@ -430,7 +439,9 @@ class DocumentsService {
 
     final row = await db
         .customSelect(
-          'SELECT * from "$collectionName" WHERE id = ? LIMIT 1',
+          db.adaptPlaceholders(
+            'SELECT * from "$collectionName" WHERE id = ? LIMIT 1',
+          ),
           variables: [Variable<String>(documentId)],
         )
         .getSingleOrNull();
@@ -459,7 +470,7 @@ class DocumentsService {
     }
 
     await db.customUpdate(
-      'DELETE FROM "$collectionName" WHERE id = ?',
+      db.adaptPlaceholders('DELETE FROM "$collectionName" WHERE id = ?'),
       variables: [Variable<String>(documentId)],
     );
 

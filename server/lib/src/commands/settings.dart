@@ -28,7 +28,7 @@ class SettingsCommand extends Command {
 }
 
 ServiceContext _createContext(Environment env) {
-  return (database: AppDatabase(null, env.databasePath), env: env, realtime: null, hooks: null);
+  return (database: AppDatabase.fromEnv(env), env: env, realtime: null, hooks: null);
 }
 
 int _countOAuthProviders(OAuthProviderList providers) {

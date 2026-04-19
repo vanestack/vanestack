@@ -62,7 +62,13 @@ class VaneStackServer {
       context: 'port=${env.port}, mode=${kReleaseMode ? 'release' : 'debug'}',
     );
 
-    await collectionsCache.warmUp(database);
+    // Kick off the cache warmup in parallel with the rest of startup. Every
+    // endpoint that reads collection metadata uses `resolve()` which falls
+    // back to a DB lookup on miss, so requests that land before the warmup
+    // completes still work — they just pay one extra round-trip each. The
+    // admin stats endpoint (which uses `names`) may see zero collections for
+    // the tiny startup window; the dashboard re-renders on the next poll.
+    final warmUpFuture = collectionsCache.warmUp(database);
 
     var router = Router();
 
@@ -117,12 +123,18 @@ class VaneStackServer {
         .addMiddleware(decodeJwt())
         .addHandler(router.call);
 
-    _httpServer = await shelf_io.serve(
-      handler,
-      InternetAddress.anyIPv4,
-      env.port,
-      shared: true,
-    );
+    // Run the port bind and the cache warmup concurrently so the warmup
+    // round-trip is hidden behind the (usually slower) TLS-backed DB query.
+    final (server, _) = await (
+      shelf_io.serve(
+        handler,
+        InternetAddress.anyIPv4,
+        env.port,
+        shared: true,
+      ),
+      warmUpFuture,
+    ).wait;
+    _httpServer = server;
 
     _httpServer?.autoCompress = true;
     _httpServer?.serverHeader = 'VaneStack';

@@ -246,6 +246,11 @@ class StorageService {
   }
 
   /// Lists raw DbFile records in a bucket with optional filtering and pagination.
+  ///
+  /// Assumes the caller has already verified bucket existence — the
+  /// `/v1/files/<bucket>` endpoint does so alongside the file query, in
+  /// parallel. For internal callers that need the safety check, use
+  /// [getBucket] first.
   Future<(List<DbFile> files, List<String> folders)> listFiles({
     required String bucket,
     String? path,
@@ -254,16 +259,6 @@ class StorageService {
     int? limit = 10,
     int offset = 0,
   }) async {
-    final bucketEntity = await getBucket(bucket);
-
-    if (bucketEntity == null) {
-      throw VaneStackException(
-        'Bucket not found.',
-        status: HttpStatus.notFound,
-        code: StorageErrorCode.bucketNotFound,
-      );
-    }
-
     final currentPath = path ?? '';
     final depth = currentPath.length + 1;
 
@@ -303,7 +298,7 @@ class StorageService {
       variables.addAll([limit, offset]);
     }
 
-    final files = await db
+    final filesFut = db
         .customSelect(
           db.adaptPlaceholders(
             'SELECT * FROM "_files" WHERE $whereSql$orderClause$limitClause',
@@ -313,7 +308,6 @@ class StorageService {
         .map((row) => db.files.map(row.data))
         .get();
 
-    // Get folders
     final folders = db.files.selectOnly(distinct: true);
     final folderName = db.files.path.substrExpr(
       Constant(depth),
@@ -334,7 +328,7 @@ class StorageService {
       folders.limit(limit, offset: offset);
     }
 
-    final folderList = await folders.get();
+    final (files, folderList) = await (filesFut, folders.get()).wait;
     final folderNames =
         folderList.map((row) => row.read<String>(folderName)).nonNulls.toList()
           ..sort();

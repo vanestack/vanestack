@@ -20,19 +20,26 @@ FutureOr<ListFilesResult> list(
 ]) async {
   final storageService = request.storageService;
 
-  final bucketEntity = await storageService.getBucket(bucket);
+  // Look up the bucket metadata in parallel with the file list. If the bucket
+  // doesn't exist, the file list returns empty rows; we bail after the
+  // bucket check below.
+  final (bucketEntity, filesAndFolders) = await (
+    storageService.getBucket(bucket),
+    storageService.listFiles(
+      bucket: bucket,
+      path: path,
+      filter: filter,
+      orderBy: orderBy,
+      limit: limit,
+      offset: offset ?? 0,
+    ),
+  ).wait;
+
   if (bucketEntity == null) {
     throw VaneStackException('Bucket not found.', status: HttpStatus.notFound, code: StorageErrorCode.bucketNotFound);
   }
 
-  final (files, folders) = await storageService.listFiles(
-    bucket: bucket,
-    path: path,
-    filter: filter,
-    orderBy: orderBy,
-    limit: limit,
-    offset: offset ?? 0,
-  );
+  final (files, folders) = filesAndFolders;
 
   final listRule = bucketEntity.listRule;
   if (listRule == null) {

@@ -23,9 +23,31 @@ class SettingsService {
 
   AppDatabase get db => context.database;
 
+  // Settings rarely change but are read on most requests (storage backend
+  // resolution, SMTP config, OAuth redirects). A short process-wide TTL
+  // turns the steady-state cost from one round-trip per request into
+  // one per [_cacheTtl] window across the whole server.
+  static const _cacheTtl = Duration(seconds: 10);
+  static ({Settings settings, DateTime expiresAt})? _cache;
+
+  static void invalidateCache() => _cache = null;
+
   /// Gets the application settings.
   /// Creates default settings if none exist.
   Future<Settings> get() async {
+    final cached = _cache;
+    if (cached != null && DateTime.now().isBefore(cached.expiresAt)) {
+      return cached.settings;
+    }
+    final settings = await _fetch();
+    _cache = (
+      settings: settings,
+      expiresAt: DateTime.now().add(_cacheTtl),
+    );
+    return settings;
+  }
+
+  Future<Settings> _fetch() async {
     final settings = await (db.appSettings.select()..limit(1))
         .getSingleOrNull();
 
@@ -103,6 +125,11 @@ class SettingsService {
     }
 
     serverLogger.info('Settings updated');
+
+    _cache = (
+      settings: data,
+      expiresAt: DateTime.now().add(_cacheTtl),
+    );
 
     return data;
   }

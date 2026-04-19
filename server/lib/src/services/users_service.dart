@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -180,10 +181,24 @@ class UsersService {
       if (sql.isNotEmpty) orderClause = ' $sql';
     }
 
-    final users = await db
+    // Pull the provider list for each user as a JSON-aggregated column in
+    // the users SELECT itself. That collapses the historical "users then
+    // providers" two-step into a single round-trip. Count runs in parallel.
+    // Cast to text on postgres so the `postgres` driver returns the aggregate
+    // as a plain JSON string (otherwise it decodes to a Dart List, and the
+    // row.read<String> below would throw).
+    final providersExpr = db.executor.dialect == SqlDialect.postgres
+        ? '(COALESCE((SELECT json_agg(ea.provider) '
+              'FROM "_external_auths" ea WHERE ea.user_id = u.id), '
+              "'[]'::json))::text"
+        : "COALESCE((SELECT json_group_array(ea.provider) "
+              "FROM \"_external_auths\" ea WHERE ea.user_id = u.id), '[]')";
+
+    final rowsFut = db
         .customSelect(
           db.adaptPlaceholders(
-            'SELECT * FROM "_users"$whereClause$orderClause LIMIT ? OFFSET ?',
+            'SELECT u.*, $providersExpr AS providers '
+            'FROM "_users" u$whereClause$orderClause LIMIT ? OFFSET ?',
           ),
           variables: [
             ...variables.map(toFilterVariable),
@@ -191,10 +206,8 @@ class UsersService {
             Variable<int>(offset),
           ],
         )
-        .map((row) => db.users.map(row.data))
         .get();
-
-    final count = await db
+    final countFut = db
         .customSelect(
           db.adaptPlaceholders(
             'SELECT COUNT(*) AS c FROM "_users"$whereClause',
@@ -204,13 +217,15 @@ class UsersService {
         .map((row) => row.read<int>('c'))
         .getSingle();
 
-    final userIds = users.map((e) => e.id).toList();
-    final providers = await _getProviders(userIds);
+    final (rows, count) = await (rowsFut, countFut).wait;
 
     return ListUsersResult(
-      users: users
-          .map((e) => e.toPublic(providers: providers[e.id] ?? []))
-          .toList(),
+      users: rows.map((row) {
+        final user = db.users.map(row.data);
+        final raw = row.read<String>('providers');
+        final providers = (jsonDecode(raw) as List).cast<String>();
+        return user.toPublic(providers: providers);
+      }).toList(),
       count: count,
     );
   }

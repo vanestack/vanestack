@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:drift/drift.dart';
 import 'package:mailer/smtp_server.dart';
 import 'package:shelf/shelf.dart';
 import 'package:vanestack_common/vanestack_common.dart';
@@ -134,21 +133,12 @@ extension ServicesX on Request {
     return cache;
   }
 
-  /// Retrieves the application settings from the database.
-  Future<Settings> settings() async {
-    final settings = await (database.appSettings.select()..limit(1))
-        .getSingleOrNull();
-
-    if (settings == null) {
-      throw VaneStackException(
-        'Application settings not found.',
-        status: HttpStatus.internalServerError,
-        code: StorageErrorCode.settingsNotFound,
-      );
-    }
-
-    return settings;
-  }
+  /// Retrieves the application settings.
+  ///
+  /// Delegates to [SettingsService.get], which caches the row with a short
+  /// TTL — so multiple calls within a request (and across most requests in a
+  /// window) are near-free.
+  Future<Settings> settings() => settingsService.get();
 
   /// Retrieves the SMTP server configuration.
   /// Use with the mailer package to send emails.

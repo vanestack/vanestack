@@ -238,28 +238,29 @@ class DocumentsService {
       orderClause = sql.isNotEmpty ? ' $sql' : null;
     }
 
-    final result = await db
-        .customSelect(
-          db.adaptPlaceholders(
-            'SELECT * from "$collectionName"${whereClause ?? ''}${orderClause ?? ''} LIMIT ? OFFSET ?',
-          ),
-          variables: [
-            ...?paramValues?.map(toFilterVariable),
-            Variable<int>(limit),
-            Variable<int>(offset),
-          ],
-        )
-        .get();
-
-    final count = await db
-        .customSelect(
-          db.adaptPlaceholders(
-            'SELECT COUNT(*) as count from "$collectionName"${whereClause ?? ''}',
-          ),
-          variables: [...?paramValues?.map(toFilterVariable)],
-        )
-        .getSingle()
-        .then((row) => row.read<int>('count'));
+    final (result, count) = await (
+      db
+          .customSelect(
+            db.adaptPlaceholders(
+              'SELECT * from "$collectionName"${whereClause ?? ''}${orderClause ?? ''} LIMIT ? OFFSET ?',
+            ),
+            variables: [
+              ...?paramValues?.map(toFilterVariable),
+              Variable<int>(limit),
+              Variable<int>(offset),
+            ],
+          )
+          .get(),
+      db
+          .customSelect(
+            db.adaptPlaceholders(
+              'SELECT COUNT(*) as count from "$collectionName"${whereClause ?? ''}',
+            ),
+            variables: [...?paramValues?.map(toFilterVariable)],
+          )
+          .getSingle()
+          .then((row) => row.read<int>('count')),
+    ).wait;
 
     final documents = [
       ...result.map((row) => CollectionUtils.toDocument(collection, row.data)),

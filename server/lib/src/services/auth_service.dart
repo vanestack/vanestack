@@ -406,45 +406,64 @@ class AuthService {
       );
     }
 
-    final tokenRecord =
-        await (db.refreshTokens.select()
-              ..where((t) => t.refreshToken.equals(refreshToken)))
-            .getSingleOrNull();
+    // Single join to fetch the refresh-token row and its user together, so
+    // the common path pays one round-trip instead of two. The "user missing"
+    // branch survives because a missing `_users` row would make the join
+    // return no rows.
+    final row = await db
+        .customSelect(
+          db.adaptPlaceholders(
+            'SELECT u.id AS id, u.email AS email, u.name AS name, '
+            'u.super_user AS super_user, u.password_hash AS password_hash, '
+            'u.created_at AS created_at, u.updated_at AS updated_at, '
+            'rt.expires_at AS expires_at '
+            'FROM "_users" u '
+            'JOIN "_refresh_tokens" rt ON rt.user_id = u.id '
+            'WHERE rt.refresh_token = ?',
+          ),
+          variables: [Variable<String>(refreshToken)],
+          readsFrom: {db.users, db.refreshTokens},
+        )
+        .getSingleOrNull();
 
-    if (tokenRecord == null) {
-      authLogger.warn('Token refresh failed: invalid refresh token');
-      throw VaneStackException(
-        'Invalid refresh token.',
-        status: HttpStatus.badRequest,
-        code: AuthErrorCode.invalidRefreshToken,
-      );
-    }
-
-    if (tokenRecord.expiresAt.isBefore(DateTime.now())) {
-      authLogger.warn(
-        'Token refresh failed: token expired',
-        userId: tokenRecord.userId,
-      );
-      throw VaneStackException(
-        'Refresh token expired.',
-        status: HttpStatus.badRequest,
-        code: AuthErrorCode.expiredRefreshToken,
-      );
-    }
-
-    final user =
-        await (db.users.select()..where((u) => u.id.equals(tokenRecord.userId)))
-            .getSingleOrNull();
-
-    if (user == null) {
+    if (row == null) {
+      // Could be an unknown refresh token or an orphaned one whose user was
+      // deleted. Distinguish with a second cheap lookup only in the rare
+      // failure path.
+      final orphan = await (db.refreshTokens.select()
+            ..where((t) => t.refreshToken.equals(refreshToken)))
+          .getSingleOrNull();
+      if (orphan == null) {
+        authLogger.warn('Token refresh failed: invalid refresh token');
+        throw VaneStackException(
+          'Invalid refresh token.',
+          status: HttpStatus.badRequest,
+          code: AuthErrorCode.invalidRefreshToken,
+        );
+      }
       authLogger.warn(
         'Token refresh failed: user not found',
-        userId: tokenRecord.userId,
+        userId: orphan.userId,
       );
       throw VaneStackException(
         'User not found.',
         status: HttpStatus.notFound,
         code: AuthErrorCode.userNotFound,
+      );
+    }
+
+    final user = db.users.map(row.data);
+    final expiresAt = row.read<DateTime>('expires_at');
+
+    if (expiresAt.isBefore(DateTime.now())) {
+      authLogger.warn(
+        'Token refresh failed: token expired',
+        userId: user.id,
+      );
+      throw VaneStackException(
+        'Refresh token expired.',
+        status: HttpStatus.badRequest,
+        code: AuthErrorCode.expiredRefreshToken,
       );
     }
 
@@ -457,18 +476,19 @@ class AuthService {
 
     final newRefreshToken = AuthUtils.generateRandomToken();
 
-    // Delete the old refresh token to prevent reuse
-    await db.refreshTokens.deleteWhere(
-      (t) => t.refreshToken.equals(refreshToken),
-    );
-
-    await db.refreshTokens.insertOne(
-      RefreshTokensCompanion.insert(
-        userId: user.id,
-        refreshToken: newRefreshToken,
-        accessToken: newAccessToken,
+    // Delete the old refresh token and insert the new one concurrently —
+    // they touch different rows so ordering doesn't matter, and on the pool
+    // they run on separate connections.
+    await (
+      db.refreshTokens.deleteWhere((t) => t.refreshToken.equals(refreshToken)),
+      db.refreshTokens.insertOne(
+        RefreshTokensCompanion.insert(
+          userId: user.id,
+          refreshToken: newRefreshToken,
+          accessToken: newAccessToken,
+        ),
       ),
-    );
+    ).wait;
 
     authLogger.debug('Token refreshed', userId: user.id);
 

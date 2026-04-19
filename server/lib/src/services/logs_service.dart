@@ -55,28 +55,29 @@ class LogsService {
     }
     orderClause ??= ' ORDER BY id DESC';
 
-    final result = await db
-        .customSelect(
-          db.adaptPlaceholders(
-            'SELECT * from _logs${whereClause ?? ''}$orderClause LIMIT ? OFFSET ?',
-          ),
-          variables: [
-            ...?paramValues?.map(toFilterVariable),
-            Variable<int>(limit),
-            Variable<int>(offset),
-          ],
-        )
-        .get();
-
-    final count = await db
-        .customSelect(
-          db.adaptPlaceholders(
-            'SELECT COUNT(*) as count from _logs${whereClause ?? ''}',
-          ),
-          variables: [...?paramValues?.map(toFilterVariable)],
-        )
-        .getSingle()
-        .then((row) => row.read<int>('count'));
+    final (result, count) = await (
+      db
+          .customSelect(
+            db.adaptPlaceholders(
+              'SELECT * from _logs${whereClause ?? ''}$orderClause LIMIT ? OFFSET ?',
+            ),
+            variables: [
+              ...?paramValues?.map(toFilterVariable),
+              Variable<int>(limit),
+              Variable<int>(offset),
+            ],
+          )
+          .get(),
+      db
+          .customSelect(
+            db.adaptPlaceholders(
+              'SELECT COUNT(*) as count from _logs${whereClause ?? ''}',
+            ),
+            variables: [...?paramValues?.map(toFilterVariable)],
+          )
+          .getSingle()
+          .then((row) => row.read<int>('count')),
+    ).wait;
 
     final logs = await Future.wait([
       ...result.map((row) => db.logs.mapFromRow(row)),

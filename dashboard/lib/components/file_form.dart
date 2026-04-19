@@ -300,10 +300,12 @@ class _FileFormState extends State<FileForm> {
                 ]),
               label(classes: 'grid gap-2', [
                 Component.text('File'),
-                input<web.FileList>(
+                input<List<web.File>>(
                   type: InputType.file,
-                  onInput: (value) {
-                    _selectedFile = value.item(0);
+                  onInput: (files) {
+                    setState(() {
+                      _selectedFile = files.isNotEmpty ? files.first : null;
+                    });
                     _form.getControl<String>('fileName')!.setValue(_selectedFile?.name ?? '');
                   },
                 ),

@@ -6,157 +6,115 @@ import 'package:vanestack_annotation/vanestack_annotation.dart';
 import 'package:vanestack_common/vanestack_common.dart';
 
 import '../../utils/extensions.dart';
+import '../../utils/tables.dart';
 
 @Route(path: '/v1/stats', method: HttpMethod.get, requireSuperUserAuth: true)
 FutureOr<DashboardStats> stats(Request request) async {
   final db = request.database;
+  final isPg = db.executor.dialect == SqlDialect.postgres;
 
-  // Count non-superuser users
-  final totalUsers =
-      await (db.users.selectOnly()
-            ..where(db.users.superUser.equals(false))
-            ..addColumns([db.users.id.count()]))
-          .map((row) => row.read(db.users.id.count())!)
-          .getSingle();
+  // Dialect-specific fragments.
+  final falseLit = isPg ? 'false' : '0';
+  final nullBig = isPg ? 'NULL::bigint' : 'NULL';
+  final nullText = isPg ? 'NULL::text' : 'NULL';
+  final dayExpr = isPg
+      ? "to_char(to_timestamp(created_at), 'YYYY-MM-DD')"
+      : "DATE(created_at, 'unixepoch')";
 
-  // Count documents across all collection tables
-  final collectionNames = request.collectionsCache.names;
-
-  var totalDocuments = 0;
-  for (final name in collectionNames) {
-    final result = await db
-        .customSelect('SELECT COUNT(*) as cnt FROM "$name"')
-        .getSingle();
-    totalDocuments += result.read<int>('cnt');
-  }
-
-  // Count files and sum sizes
-  final fileCountExpr = db.files.id.count();
-  final fileSizeExpr = db.files.size.sum();
-  final fileResult =
-      await (db.files.selectOnly()..addColumns([fileCountExpr, fileSizeExpr]))
-          .map(
-            (row) => (
-              count: row.read(fileCountExpr)!,
-              size: row.read(fileSizeExpr) ?? 0,
-            ),
-          )
-          .getSingle();
-
-  // Count HTTP logs (total)
-  final totalRequests =
-      await (db.logs.selectOnly()
-            ..where(db.logs.source.equalsValue(LogSource.http))
-            ..addColumns([db.logs.id.count()]))
-          .map((row) => row.read(db.logs.id.count())!)
-          .getSingle();
-
-  // Count HTTP logs created today
+  // Dates for the log metrics.
   final now = DateTime.now();
   final todayStart = DateTime(now.year, now.month, now.day);
-  final requestsToday =
-      await (db.logs.selectOnly()
-            ..where(db.logs.source.equalsValue(LogSource.http))
-            ..where(db.logs.createdAt.isBiggerOrEqualValue(todayStart))
-            ..addColumns([db.logs.id.count()]))
-          .map((row) => row.read(db.logs.id.count())!)
-          .getSingle();
+  final sevenDaysAgo = todayStart.subtract(const Duration(days: 6));
+  final todayEpoch = todayStart.millisecondsSinceEpoch ~/ 1000;
+  final sevenDaysEpoch = sevenDaysAgo.millisecondsSinceEpoch ~/ 1000;
 
-  // Status breakdown from HTTP logs grouped by level
-  // info -> 2xx, warn -> 4xx, error -> 5xx
-  final statusRows = await db
+  // Collection counts are inlined as one UNION ALL branch per collection.
+  // Names come from the trusted cache, but guard against injection by
+  // re-validating the identifier before interpolating into raw SQL.
+  final collectionNames = request.collectionsCache.names
+      .where(isValidIdentifier)
+      .toList();
+  final collBranches = [
+    for (final n in collectionNames)
+      "SELECT 'coll' AS metric, '$n' AS label, COUNT(*) AS v, $nullBig AS v2 FROM \"$n\"",
+  ];
+
+  final branches = <String>[
+    "SELECT 'users' AS metric, $nullText AS label, COUNT(*) AS v, $nullBig AS v2 FROM _users WHERE super_user = $falseLit",
+    "SELECT 'files', $nullText, COUNT(*), COALESCE(SUM(size), 0) FROM _files",
+    "SELECT 'logs_total', $nullText, COUNT(*), $nullBig FROM _logs WHERE source = 'http'",
+    "SELECT 'logs_today', $nullText, COUNT(*), $nullBig FROM _logs WHERE source = 'http' AND created_at >= ?",
+    "SELECT 'logs_level', level, COUNT(*), $nullBig FROM _logs WHERE source = 'http' GROUP BY level",
+    "SELECT 'logs_day', $dayExpr, COUNT(*), $nullBig FROM _logs WHERE source = 'http' AND created_at >= ? GROUP BY $dayExpr",
+    ...collBranches,
+  ];
+
+  final sql = branches.join('\nUNION ALL ');
+
+  final rows = await db
       .customSelect(
-        "SELECT level, COUNT(*) as cnt FROM _logs WHERE source = 'http' GROUP BY level",
+        db.adaptPlaceholders(sql),
+        variables: [Variable<int>(todayEpoch), Variable<int>(sevenDaysEpoch)],
       )
       .get();
 
+  var totalUsers = 0;
+  var totalFiles = 0;
+  var totalStorageBytes = 0;
+  var totalRequests = 0;
+  var requestsToday = 0;
+  var totalDocuments = 0;
   final statusBreakdown = <String, int>{};
-  for (final row in statusRows) {
-    final level = row.read<String>('level');
-    final count = row.read<int>('cnt');
-    final key = switch (level) {
-      'info' => '2xx',
-      'warn' => '4xx',
-      'error' => '5xx',
-      _ => level,
-    };
-    statusBreakdown[key] = (statusBreakdown[key] ?? 0) + count;
-  }
-
-  // Requests per day for last 7 days
-  final sevenDaysAgo = todayStart.subtract(const Duration(days: 6));
-
-  // Dialect-aware "YYYY-MM-DD" derived from the epoch-seconds timestamp.
-  // Drift's `.date` getter renders as sqlite's `DATE(col, 'unixepoch')`,
-  // which postgres doesn't understand.
-  final day = _EpochDateString(db.logs.createdAt);
-  final cnt = db.logs.id.count();
-  final perDayRows =
-      await (db.logs.selectOnly()
-            ..addColumns([day, cnt])
-            ..where(
-              Expression.and([
-                db.logs.source.equals('http'),
-                db.logs.createdAt.isBiggerOrEqualValue(sevenDaysAgo),
-              ]),
-            )
-            ..groupBy([day])
-            ..orderBy([OrderingTerm.asc(day)]))
-          .get();
-
-  final requestsPerDay = <RequestPoint>[];
   final perDayMap = <String, int>{};
-  for (final row in perDayRows) {
-    final key = row.read(day);
-    final value = row.read(cnt);
-    if (key == null || value == null) continue;
-    perDayMap[row.read(day)!] = row.read(cnt)!;
+
+  for (final row in rows) {
+    final metric = row.read<String>('metric');
+    final value = row.read<int>('v');
+    switch (metric) {
+      case 'users':
+        totalUsers = value;
+      case 'files':
+        totalFiles = value;
+        totalStorageBytes = row.read<int>('v2');
+      case 'logs_total':
+        totalRequests = value;
+      case 'logs_today':
+        requestsToday = value;
+      case 'logs_level':
+        final level = row.read<String>('label');
+        final key = switch (level) {
+          'info' => '2xx',
+          'warn' => '4xx',
+          'error' => '5xx',
+          _ => level,
+        };
+        statusBreakdown[key] = (statusBreakdown[key] ?? 0) + value;
+      case 'logs_day':
+        perDayMap[row.read<String>('label')] = value;
+      case 'coll':
+        totalDocuments += value;
+    }
   }
 
-  // Fill in missing days with 0
-  for (var i = 0; i < 7; i++) {
-    final date = sevenDaysAgo.add(Duration(days: i));
-    final key =
-        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    requestsPerDay.add(RequestPoint(date: date, count: perDayMap[key] ?? 0));
-  }
+  // Fill in missing days with 0 so the chart always shows a 7-day window.
+  final requestsPerDay = <RequestPoint>[
+    for (var i = 0; i < 7; i++)
+      () {
+        final date = sevenDaysAgo.add(Duration(days: i));
+        final key =
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+        return RequestPoint(date: date, count: perDayMap[key] ?? 0);
+      }(),
+  ];
 
   return DashboardStats(
     totalUsers: totalUsers,
     totalDocuments: totalDocuments,
-    totalFiles: fileResult.count,
-    totalStorageBytes: fileResult.size,
+    totalFiles: totalFiles,
+    totalStorageBytes: totalStorageBytes,
     totalRequests: totalRequests,
     requestsToday: requestsToday,
     statusBreakdown: statusBreakdown,
     requestsPerDay: requestsPerDay,
   );
-}
-
-/// Renders a `YYYY-MM-DD` string from an epoch-seconds datetime column, using
-/// dialect-appropriate SQL.
-///
-/// Drift's built-in `DateTimeExpressions.date` getter produces
-/// `DATE(col, 'unixepoch')`, which only sqlite understands. On postgres we
-/// go through `to_timestamp(col)` and `to_char(..., 'YYYY-MM-DD')`.
-class _EpochDateString extends Expression<String> {
-  final Expression<DateTime> _col;
-
-  const _EpochDateString(this._col);
-
-  @override
-  Precedence get precedence => Precedence.primary;
-
-  @override
-  void writeInto(GenerationContext context) {
-    if (context.dialect == SqlDialect.postgres) {
-      context.buffer.write('to_char(to_timestamp(');
-      _col.writeInto(context);
-      context.buffer.write("), 'YYYY-MM-DD')");
-    } else {
-      context.buffer.write('DATE(');
-      _col.writeInto(context);
-      context.buffer.write(", 'unixepoch')");
-    }
-  }
 }

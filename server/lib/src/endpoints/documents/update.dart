@@ -6,7 +6,6 @@ import 'package:shelf/shelf.dart';
 
 import '../../permissions/rules_engine.dart';
 import 'package:vanestack_annotation/vanestack_annotation.dart';
-import '../../utils/collection_data.dart';
 import '../../utils/extensions.dart';
 
 import '../../utils/logger.dart';
@@ -40,19 +39,15 @@ FutureOr<Document> update(
   }
 
   // Get collection for permission check
-  final collectionData = await db.managers.collections
-      .filter((t) => t.name.equals(collectionName))
-      .getSingleOrNull();
+  final collection = await request.collectionsCache.resolve(collectionName, db);
 
-  if (collectionData == null) {
+  if (collection == null) {
     throw VaneStackException(
       'Collection not found.',
       status: HttpStatus.notFound,
       code: CollectionsErrorCode.collectionNotFound,
     );
   }
-
-  final collection = collectionData.toModel();
 
   if (collection is ViewCollection) {
     collectionsLogger.warn(

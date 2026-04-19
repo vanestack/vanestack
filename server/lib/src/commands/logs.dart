@@ -25,7 +25,13 @@ class LogsCommand extends Command {
 }
 
 ServiceContext _createContext(Environment env) {
-  return (database: AppDatabase.fromEnv(env), env: env, realtime: null, hooks: null);
+  return (
+    database: AppDatabase.fromEnv(env),
+    env: env,
+    realtime: null,
+    hooks: null,
+    collectionsCache: null,
+  );
 }
 
 class ListLogsCommand extends Command {

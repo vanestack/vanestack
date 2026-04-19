@@ -28,7 +28,7 @@ void main() {
     env = Environment(port: 0);
     database = AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
     executor = HookExecutor();
-    context = (database: database, env: env, realtime: null, hooks: executor);
+    context = (database: database, env: env, realtime: null, hooks: executor, collectionsCache: null);
     registry = HookRegistry(executor);
   });
 

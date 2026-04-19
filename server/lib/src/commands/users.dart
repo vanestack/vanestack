@@ -36,6 +36,7 @@ ServiceContext _createContext(Environment env) {
     env: env,
     realtime: null,
     hooks: null,
+    collectionsCache: null,
   );
 }
 

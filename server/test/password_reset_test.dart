@@ -46,7 +46,7 @@ void main() {
     expect(signupRes.status, anyOf(200, 201));
 
     // Create password reset token (bypasses email sending)
-    final context = (database: database, env: env, realtime: null, hooks: null) as ServiceContext;
+    final context = (database: database, env: env, realtime: null, hooks: null, collectionsCache: null) as ServiceContext;
     final authService = AuthService(context);
     final token = await authService.createPasswordResetToken(email: email);
     expect(token, isNotEmpty);

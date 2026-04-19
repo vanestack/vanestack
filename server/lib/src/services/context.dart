@@ -1,6 +1,7 @@
 import '../database/database.dart';
 import '../realtime/realtime.dart';
 import '../utils/env.dart';
+import 'collections_cache.dart';
 import 'hook_runner.dart';
 
 /// Provides dependencies for service classes.
@@ -12,4 +13,5 @@ typedef ServiceContext = ({
   Environment env,
   RealtimeEventBus? realtime,
   HookExecutor? hooks,
+  CollectionsCache? collectionsCache,
 });

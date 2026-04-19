@@ -1,4 +1,5 @@
 export 'auth_service.dart';
+export 'collections_cache.dart';
 export 'collections_service.dart';
 export 'context.dart';
 export 'documents_service.dart';

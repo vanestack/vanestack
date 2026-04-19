@@ -55,6 +55,10 @@ void main() {
       ),
     );
 
+    // Test seeds _collections directly (not through CollectionsService), so
+    // the warm-up done in server.start() ran before these rows existed.
+    await server.collectionsCache.warmUp(database);
+
     // Insert test row
     final rowId = await database.customInsert('''
       INSERT INTO notes (content, email, is_important)
@@ -84,6 +88,7 @@ void main() {
         'isSuperUser': true,
         'bearerToken': jwt,
         'database': database,
+        'collectionsCache': server.collectionsCache,
       },
     );
 

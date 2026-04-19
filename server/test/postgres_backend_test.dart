@@ -75,7 +75,7 @@ void main() {
     db = AppDatabase(AppDatabase.postgresExecutor(url));
     // Force migration/onCreate by issuing a trivial drift query.
     await db.collections.select().get();
-    ctx = (database: db, env: const Environment(), realtime: null, hooks: null);
+    ctx = (database: db, env: const Environment(), realtime: null, hooks: null, collectionsCache: null);
   });
 
   tearDown(() async {

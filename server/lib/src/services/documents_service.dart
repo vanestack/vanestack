@@ -31,6 +31,20 @@ class DocumentsService {
   AppDatabase get db => context.database;
   RealtimeEventBus? get realtime => context.realtime;
 
+  /// Resolves collection metadata via the in-memory cache when available, or
+  /// falls back to a single-row select (e.g. when used from the CLI where no
+  /// cache is wired up, or when the collection was inserted outside the
+  /// service path).
+  Future<Collection?> _resolveCollection(String collectionName) async {
+    final cache = context.collectionsCache;
+    if (cache != null) return cache.resolve(collectionName, db);
+
+    final row = await (db.collections.select()
+          ..where((tbl) => tbl.name.equals(collectionName)))
+        .getSingleOrNull();
+    return row?.toModel();
+  }
+
   /// Creates a document in a collection.
   ///
   /// Throws [VaneStackException] if:
@@ -42,20 +56,15 @@ class DocumentsService {
     required Map<String, Object?> data,
     bool emitEvent = true,
   }) async {
-    final collectionData =
-        await (db.collections.select()
-              ..where((tbl) => tbl.name.equals(collectionName)))
-            .getSingleOrNull();
+    final collection = await _resolveCollection(collectionName);
 
-    if (collectionData == null) {
+    if (collection == null) {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
         code: DocumentsErrorCode.collectionNotFound,
       );
     }
-
-    final collection = collectionData.toModel();
 
     if (collection is ViewCollection) {
       throw VaneStackException(
@@ -154,20 +163,15 @@ class DocumentsService {
     required String collectionName,
     required String documentId,
   }) async {
-    final collectionData =
-        await (db.collections.select()
-              ..where((tbl) => tbl.name.equals(collectionName)))
-            .getSingleOrNull();
+    final collection = await _resolveCollection(collectionName);
 
-    if (collectionData == null) {
+    if (collection == null) {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
         code: DocumentsErrorCode.collectionNotFound,
       );
     }
-
-    final collection = collectionData.toModel();
 
     final row = await db
         .customSelect(
@@ -193,20 +197,15 @@ class DocumentsService {
     int limit = 10,
     int offset = 0,
   }) async {
-    final collectionData =
-        await (db.collections.select()
-              ..where((tbl) => tbl.name.equals(collectionName)))
-            .getSingleOrNull();
+    final collection = await _resolveCollection(collectionName);
 
-    if (collectionData == null) {
+    if (collection == null) {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
         code: DocumentsErrorCode.collectionNotFound,
       );
     }
-
-    final collection = collectionData.toModel();
 
     // Build allowed fields from collection attributes + built-in fields
     final allowedFields = <String>{
@@ -282,20 +281,15 @@ class DocumentsService {
     required Map<String, Object?> data,
     bool emitEvent = true,
   }) async {
-    final collectionData =
-        await (db.collections.select()
-              ..where((tbl) => tbl.name.equals(collectionName)))
-            .getSingleOrNull();
+    final collection = await _resolveCollection(collectionName);
 
-    if (collectionData == null) {
+    if (collection == null) {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
         code: DocumentsErrorCode.collectionNotFound,
       );
     }
-
-    final collection = collectionData.toModel();
 
     if (collection is ViewCollection) {
       throw VaneStackException(
@@ -412,20 +406,15 @@ class DocumentsService {
     required String documentId,
     bool emitEvent = true,
   }) async {
-    final collectionData =
-        await (db.collections.select()
-              ..where((tbl) => tbl.name.equals(collectionName)))
-            .getSingleOrNull();
+    final collection = await _resolveCollection(collectionName);
 
-    if (collectionData == null) {
+    if (collection == null) {
       throw VaneStackException(
         'Collection not found.',
         status: HttpStatus.notFound,
         code: DocumentsErrorCode.collectionNotFound,
       );
     }
-
-    final collection = collectionData.toModel();
 
     if (collection is ViewCollection) {
       throw VaneStackException(

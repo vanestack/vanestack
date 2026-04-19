@@ -24,7 +24,7 @@ void main() {
     setUp(() async {
       env = Environment(port: 0);
       database = AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
-      context = (database: database, env: env, realtime: null, hooks: null);
+      context = (database: database, env: env, realtime: null, hooks: null, collectionsCache: null);
       authService = AuthService(context);
     });
 

@@ -10,6 +10,7 @@ import '../utils/collection.dart';
 import '../utils/collection_data.dart';
 import '../utils/logger.dart';
 import '../utils/tables.dart';
+import 'collections_cache.dart';
 import 'context.dart';
 import 'hooks.dart';
 
@@ -27,6 +28,7 @@ class CollectionsService {
   CollectionsService(this.context);
 
   AppDatabase get db => context.database;
+  CollectionsCache? get _cache => context.collectionsCache;
 
   // ==================== Dialect helpers ====================
 
@@ -50,10 +52,7 @@ class CollectionsService {
   /// both backends; only `unixepoch()` needs rewriting.
   String _translateDefaultExpr(String value) {
     if (!_isPostgres) return value;
-    return value.replaceAll(
-      'unixepoch()',
-      'EXTRACT(EPOCH FROM now())::bigint',
-    );
+    return value.replaceAll('unixepoch()', 'EXTRACT(EPOCH FROM now())::bigint');
   }
 
   /// Dialect-specific epoch-seconds column type for timestamps.
@@ -80,6 +79,9 @@ class CollectionsService {
         code: CollectionsErrorCode.invalidCollectionName,
       );
     }
+
+    final cache = _cache;
+    if (cache != null) return cache.resolve(name, db);
 
     final collection = await db.managers.collections
         .filter((t) => t.name.equals(name))
@@ -249,6 +251,8 @@ class CollectionsService {
 
     final baseCollection = result.toModel() as BaseCollection;
 
+    _cache?.put(baseCollection);
+
     collectionsLogger.info('Base collection created', context: 'name=$name');
 
     if (context.hooks != null) {
@@ -315,7 +319,11 @@ class CollectionsService {
       try {
         await db.customStatement(createViewSQL);
       } on Exception catch (e, st) {
-        collectionsLogger.error('Failed to create view "$name"', error: e, stackTrace: st);
+        collectionsLogger.error(
+          'Failed to create view "$name"',
+          error: e,
+          stackTrace: st,
+        );
         throw VaneStackException(
           'Failed to create view: ${e.toString()}',
           status: HttpStatus.badRequest,
@@ -351,6 +359,8 @@ class CollectionsService {
     });
 
     final viewCollection = result.toModel() as ViewCollection;
+
+    _cache?.put(viewCollection);
 
     collectionsLogger.info('View collection created', context: 'name=$name');
 
@@ -465,7 +475,7 @@ class CollectionsService {
     }
 
     // Wrap all operations in a transaction for atomicity
-    return await db.transaction(() async {
+    final updatedBase = await db.transaction(() async {
       if (newName != null && newName != name) {
         await _dropTriggers(name);
         await db.customStatement('ALTER TABLE "$name" RENAME TO "$newName"');
@@ -548,18 +558,23 @@ class CollectionsService {
           .filter((t) => t.name.equals(effectiveTableName))
           .getSingle();
 
-      final updatedBase = updatedCollection.toModel() as BaseCollection;
-
-      collectionsLogger.info('Base collection updated', context: 'name=${updatedBase.name}');
-
-      if (context.hooks != null) {
-        await context.hooks!.runAfterCollectionUpdate(
-          AfterCollectionUpdateEvent(result: updatedBase),
-        );
-      }
-
-      return updatedBase;
+      return updatedCollection.toModel() as BaseCollection;
     });
+
+    _cache?.replace(previousName: name, collection: updatedBase);
+
+    collectionsLogger.info(
+      'Base collection updated',
+      context: 'name=${updatedBase.name}',
+    );
+
+    if (context.hooks != null) {
+      await context.hooks!.runAfterCollectionUpdate(
+        AfterCollectionUpdateEvent(result: updatedBase),
+      );
+    }
+
+    return updatedBase;
   }
 
   /// Updates a view collection's query and/or rules.
@@ -625,7 +640,7 @@ class CollectionsService {
       await context.hooks!.runBeforeCollectionUpdate(e);
     }
 
-    return await db.transaction(() async {
+    final updatedView = await db.transaction(() async {
       // If viewQuery changed or name changed, we need to recreate the view
       if (viewQuery != null || (newName != null && newName != name)) {
         // Drop the old view
@@ -637,7 +652,11 @@ class CollectionsService {
             'CREATE VIEW "$effectiveName" AS $effectiveViewQuery',
           );
         } on Exception catch (e, st) {
-          collectionsLogger.error('Failed to recreate view "$effectiveName"', error: e, stackTrace: st);
+          collectionsLogger.error(
+            'Failed to recreate view "$effectiveName"',
+            error: e,
+            stackTrace: st,
+          );
           // Try to restore the old view if creation fails
           await db.customStatement(
             'CREATE VIEW "$name" AS ${existing.viewQuery}',
@@ -700,18 +719,23 @@ class CollectionsService {
           .filter((t) => t.name.equals(effectiveName))
           .getSingle();
 
-      final updatedView = updatedCollection.toModel() as ViewCollection;
-
-      collectionsLogger.info('View collection updated', context: 'name=${updatedView.name}');
-
-      if (context.hooks != null) {
-        await context.hooks!.runAfterCollectionUpdate(
-          AfterCollectionUpdateEvent(result: updatedView),
-        );
-      }
-
-      return updatedView;
+      return updatedCollection.toModel() as ViewCollection;
     });
+
+    _cache?.replace(previousName: name, collection: updatedView);
+
+    collectionsLogger.info(
+      'View collection updated',
+      context: 'name=${updatedView.name}',
+    );
+
+    if (context.hooks != null) {
+      await context.hooks!.runAfterCollectionUpdate(
+        AfterCollectionUpdateEvent(result: updatedView),
+      );
+    }
+
+    return updatedView;
   }
 
   // ==================== Delete Operations ====================
@@ -786,6 +810,8 @@ class CollectionsService {
       // Remove from collections metadata
       await db.collections.deleteWhere((tbl) => tbl.name.equals(name));
     });
+
+    _cache?.remove(name);
 
     collectionsLogger.info('Collection deleted', context: 'name=$name');
 
@@ -888,6 +914,10 @@ class CollectionsService {
         }
       }
     });
+
+    if (created.isNotEmpty || updated.isNotEmpty) {
+      await _cache?.warmUp(db);
+    }
 
     return ImportResponse(
       created: created,
@@ -1064,8 +1094,9 @@ class CollectionsService {
     final List<({String name, String type, bool nullable})> rows;
 
     if (_isPostgres) {
-      final result = await db.customSelect(
-        r'''
+      final result = await db
+          .customSelect(
+            r'''
 SELECT
   column_name AS name,
   data_type AS type,
@@ -1074,8 +1105,9 @@ FROM information_schema.columns
 WHERE table_schema = current_schema() AND table_name = $1
 ORDER BY ordinal_position
 ''',
-        variables: [Variable.withString(viewName)],
-      ).get();
+            variables: [Variable.withString(viewName)],
+          )
+          .get();
       rows = [
         for (final row in result)
           (
@@ -1287,9 +1319,7 @@ EXECUTE FUNCTION "$fn"();
   /// Validates a CHECK constraint only contains safe characters.
   void _validateCheckConstraint(String constraint) {
     // Allow alphanumeric, spaces, parens, comparison operators, logical operators, quotes for literals
-    final safe = RegExp(
-      r'''^[a-zA-Z0-9_\s()><=!.'",%@\-+*/]+$''',
-    );
+    final safe = RegExp(r'''^[a-zA-Z0-9_\s()><=!.'",%@\-+*/]+$''');
     if (!safe.hasMatch(constraint)) {
       throw VaneStackException(
         'Invalid check constraint: contains disallowed characters.',
@@ -1300,7 +1330,16 @@ EXECUTE FUNCTION "$fn"();
 
     // Block dangerous SQL keywords in check constraints
     final normalized = constraint.toUpperCase();
-    const blocked = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'ATTACH', 'PRAGMA'];
+    const blocked = [
+      'DROP',
+      'DELETE',
+      'INSERT',
+      'UPDATE',
+      'ALTER',
+      'CREATE',
+      'ATTACH',
+      'PRAGMA',
+    ];
     for (final keyword in blocked) {
       if (RegExp(r'\b' + keyword + r'\b').hasMatch(normalized)) {
         throw VaneStackException(
@@ -1377,7 +1416,9 @@ EXECUTE FUNCTION "$fn"();
             !defaultValue.endsWith(')')) {
           parts.add("DEFAULT '${_escapeDefaultValue(defaultValue)}'");
         } else {
-          parts.add('DEFAULT ${_translateDefaultExpr(defaultValue.toString())}');
+          parts.add(
+            'DEFAULT ${_translateDefaultExpr(defaultValue.toString())}',
+          );
         }
       }
 
@@ -1496,8 +1537,9 @@ EXECUTE FUNCTION "$fn"();
 
   Future<Map<String, _ColumnInfo>> _getTableColumns(String tableName) async {
     if (_isPostgres) {
-      final result = await db.customSelect(
-        r'''
+      final result = await db
+          .customSelect(
+            r'''
 SELECT
   c.column_name AS name,
   c.data_type AS type,
@@ -1518,11 +1560,12 @@ LEFT JOIN (
 WHERE c.table_schema = current_schema() AND c.table_name = $2
 ORDER BY c.ordinal_position
 ''',
-        variables: [
-          Variable.withString(tableName),
-          Variable.withString(tableName),
-        ],
-      ).get();
+            variables: [
+              Variable.withString(tableName),
+              Variable.withString(tableName),
+            ],
+          )
+          .get();
 
       final columns = <String, _ColumnInfo>{};
       for (final row in result) {
@@ -1559,8 +1602,9 @@ ORDER BY c.ordinal_position
 
   Future<Map<String, _IndexInfo>> _getTableIndexes(String tableName) async {
     if (_isPostgres) {
-      final result = await db.customSelect(
-        r'''
+      final result = await db
+          .customSelect(
+            r'''
 SELECT
   ic.relname AS index_name,
   ix.indisunique AS is_unique,
@@ -1576,8 +1620,9 @@ WHERE n.nspname = current_schema()
   AND NOT ix.indisprimary
 ORDER BY ic.relname, col_position
 ''',
-        variables: [Variable.withString(tableName)],
-      ).get();
+            variables: [Variable.withString(tableName)],
+          )
+          .get();
 
       final indexes = <String, _IndexInfo>{};
       for (final row in result) {
@@ -1905,7 +1950,9 @@ ORDER BY ic.relname, col_position
             !defaultValue.endsWith(')')) {
           parts.add("DEFAULT '${_escapeDefaultValue(defaultValue)}'");
         } else {
-          parts.add('DEFAULT ${_translateDefaultExpr(defaultValue.toString())}');
+          parts.add(
+            'DEFAULT ${_translateDefaultExpr(defaultValue.toString())}',
+          );
         }
       }
 

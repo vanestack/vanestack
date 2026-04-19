@@ -20,10 +20,7 @@ FutureOr<DashboardStats> stats(Request request) async {
           .getSingle();
 
   // Count documents across all collection tables
-  final collectionNames =
-      await (db.collections.selectOnly()..addColumns([db.collections.name]))
-          .map((row) => row.read(db.collections.name)!)
-          .get();
+  final collectionNames = request.collectionsCache.names;
 
   var totalDocuments = 0;
   for (final name in collectionNames) {

@@ -129,6 +129,7 @@ class VaneStack {
     env: env,
     realtime: _internalServer.realtime,
     hooks: _hookExecutor,
+    collectionsCache: _internalServer.collectionsCache,
   );
 
   /// Access to the users service for programmatic user management.

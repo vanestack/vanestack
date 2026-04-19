@@ -1,11 +1,11 @@
 import 'package:vanestack_common/vanestack_common.dart';
-import 'package:drift/drift.dart' show TableOrViewStatements, Variable;
+import 'package:drift/drift.dart' show Variable;
 import 'package:expressions/expressions.dart' hide Variable;
 import 'package:shelf/shelf.dart';
 
 import '../database/database.dart';
+import '../services/collections_cache.dart';
 import '../utils/collection.dart';
-import '../utils/collection_data.dart';
 import '../utils/extensions.dart';
 import 'cache.dart';
 
@@ -14,7 +14,6 @@ class RulesEngine {
 
   final _docCache = SimpleCache<(String, String), Map<String, dynamic>>();
   final _existsCache = SimpleCache<(String, String), bool>();
-  final _collectionCache = SimpleCache<String, Collection>();
 
   final _evaluator = ExpressionEvaluator.async(
     memberAccessors: [
@@ -121,6 +120,7 @@ class RulesEngine {
 
   final Map<String, dynamic> _context;
   final AppDatabase _database;
+  final CollectionsCache _collectionsCache;
 
   RulesEngine({
     required Request request,
@@ -179,26 +179,11 @@ class RulesEngine {
                  ),
                },
        },
-       _database = request.database;
+       _database = request.database,
+       _collectionsCache = request.collectionsCache;
 
   Future<Collection?> _getCollection(String collectionName) async {
-    final cachedCollection = _collectionCache.get(collectionName);
-    if (cachedCollection != null) {
-      return cachedCollection;
-    }
-
-    final collectionData =
-        await (_database.collections.select()
-              ..where((tbl) => tbl.name.equals(collectionName)))
-            .getSingleOrNull();
-
-    if (collectionData != null) {
-      final collection = collectionData.toModel();
-      _collectionCache.set(collectionName, collection);
-      return collection;
-    }
-
-    return null;
+    return _collectionsCache.resolve(collectionName, _database);
   }
 
   Future<Map<String, dynamic>?> _getDocument(

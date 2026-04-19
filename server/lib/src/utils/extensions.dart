@@ -9,6 +9,7 @@ import 'package:vanestack_common/vanestack_common.dart';
 import '../database/database.dart';
 import '../realtime/realtime.dart';
 import '../services/auth_service.dart';
+import '../services/collections_cache.dart';
 import '../services/collections_service.dart';
 import '../services/context.dart';
 import '../services/documents_service.dart';
@@ -123,6 +124,16 @@ extension ServicesX on Request {
     return realtime;
   }
 
+  CollectionsCache get collectionsCache {
+    final cache = context['collectionsCache'];
+
+    if (cache == null || cache is! CollectionsCache) {
+      throw Exception('CollectionsCache not found in request context');
+    }
+
+    return cache;
+  }
+
   /// Retrieves the application settings from the database.
   Future<Settings> settings() async {
     final settings = await (database.appSettings.select()..limit(1))
@@ -201,8 +212,13 @@ extension ServicesX on Request {
   HookExecutor? get hooks => context['hooks'] as HookExecutor?;
 
   /// Creates a ServiceContext from the request context.
-  ServiceContext get serviceContext =>
-      (database: database, env: env, realtime: realtime, hooks: hooks);
+  ServiceContext get serviceContext => (
+    database: database,
+    env: env,
+    realtime: realtime,
+    hooks: hooks,
+    collectionsCache: collectionsCache,
+  );
 
   /// Access the UsersService.
   UsersService get users => UsersService(serviceContext);

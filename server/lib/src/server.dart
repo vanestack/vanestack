@@ -17,6 +17,7 @@ import 'middleware/rate_limit.dart';
 import 'middleware/security_headers.dart';
 import 'realtime/realtime.dart';
 import 'routes.dart';
+import 'services/collections_cache.dart';
 import 'services/context.dart';
 import 'services/hook_runner.dart';
 import 'services/hooks.dart';
@@ -36,6 +37,8 @@ class VaneStackServer {
   final Environment env;
 
   final realtime = RealtimeEventBus();
+
+  final collectionsCache = CollectionsCache();
 
   final Map<(HttpMethod, String), Handler>? Function()? customRoutes;
 
@@ -58,6 +61,8 @@ class VaneStackServer {
       'Starting VaneStack server...',
       context: 'port=${env.port}, mode=${kReleaseMode ? 'release' : 'debug'}',
     );
+
+    await collectionsCache.warmUp(database);
 
     var router = Router();
 
@@ -102,6 +107,7 @@ class VaneStackServer {
             'env': env,
             'realtime': realtime,
             'hooks': ?hooks,
+            'collectionsCache': collectionsCache,
           }),
         )
         .addMiddleware(cors())
@@ -128,6 +134,7 @@ class VaneStackServer {
         env: env,
         realtime: null,
         hooks: null,
+        collectionsCache: null,
       );
       final logsService = LogsService(serviceContext);
 

@@ -237,7 +237,7 @@ void main() {
     setUp(() async {
       env = Environment(port: 0);
       database = AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
-      context = (database: database, env: env, realtime: null, hooks: null);
+      context = (database: database, env: env, realtime: null, hooks: null, collectionsCache: null);
       authService = AuthService(context);
     });
 
@@ -303,7 +303,7 @@ void main() {
     setUp(() async {
       env = Environment(port: 0);
       database = AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
-      context = (database: database, env: env, realtime: null, hooks: null);
+      context = (database: database, env: env, realtime: null, hooks: null, collectionsCache: null);
       authService = AuthService(context);
     });
 
@@ -365,7 +365,7 @@ void main() {
     setUp(() async {
       env = Environment(port: 0);
       database = AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
-      context = (database: database, env: env, realtime: null, hooks: null);
+      context = (database: database, env: env, realtime: null, hooks: null, collectionsCache: null);
       logsService = LogsService(context);
     });
 
@@ -435,7 +435,7 @@ void main() {
     setUp(() async {
       env = Environment(port: 0);
       database = AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
-      context = (database: database, env: env, realtime: null, hooks: null);
+      context = (database: database, env: env, realtime: null, hooks: null, collectionsCache: null);
       authService = AuthService(context);
     });
 
@@ -495,7 +495,7 @@ void main() {
     setUp(() async {
       env = Environment(port: 0);
       database = AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
-      context = (database: database, env: env, realtime: null, hooks: null);
+      context = (database: database, env: env, realtime: null, hooks: null, collectionsCache: null);
       collectionsService = CollectionsService(context);
     });
 
@@ -631,7 +631,7 @@ void main() {
     setUp(() async {
       env = Environment(port: 0);
       database = AppDatabase(NativeDatabase.memory(setup: AppDatabase.setup));
-      context = (database: database, env: env, realtime: null, hooks: null);
+      context = (database: database, env: env, realtime: null, hooks: null, collectionsCache: null);
       collectionsService = CollectionsService(context);
 
       // Create a base table to reference in views

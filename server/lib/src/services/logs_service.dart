@@ -61,7 +61,7 @@ class LogsService {
             'SELECT * from _logs${whereClause ?? ''}$orderClause LIMIT ? OFFSET ?',
           ),
           variables: [
-            ...?paramValues?.map((value) => Variable(value)),
+            ...?paramValues?.map(toFilterVariable),
             Variable<int>(limit),
             Variable<int>(offset),
           ],
@@ -73,7 +73,7 @@ class LogsService {
           db.adaptPlaceholders(
             'SELECT COUNT(*) as count from _logs${whereClause ?? ''}',
           ),
-          variables: [...?paramValues?.map((value) => Variable(value))],
+          variables: [...?paramValues?.map(toFilterVariable)],
         )
         .getSingle()
         .then((row) => row.read<int>('count'));

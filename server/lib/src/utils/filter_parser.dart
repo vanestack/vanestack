@@ -1,3 +1,16 @@
+import 'package:drift/drift.dart';
+
+/// Wraps a parsed filter parameter in a typed [Variable] so drift binds the
+/// correct SQL type — critical on postgres, where a bool column compared with
+/// a bigint parameter raises `operator does not exist: boolean = bigint`.
+Variable toFilterVariable(Object? value) {
+  if (value is bool) return Variable<bool>(value);
+  if (value is int) return Variable<int>(value);
+  if (value is double) return Variable<double>(value);
+  if (value is String) return Variable<String>(value);
+  return Variable(value);
+}
+
 class FilterParser {
   final String input;
 
@@ -58,11 +71,9 @@ class FilterParser {
           // String literal: strip quotes
           value = valueToken.substring(1, valueToken.length - 1);
         } else if (valueToken.toLowerCase() == 'true') {
-          // Boolean true: convert to integer for SQLite
-          value = 1;
+          value = true;
         } else if (valueToken.toLowerCase() == 'false') {
-          // Boolean false: convert to integer for SQLite
-          value = 0;
+          value = false;
         } else if (RegExp(r'^\d+\.\d+$').hasMatch(valueToken)) {
           // Floating-point number
           value = double.parse(valueToken);

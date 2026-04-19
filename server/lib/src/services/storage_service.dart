@@ -308,7 +308,7 @@ class StorageService {
           db.adaptPlaceholders(
             'SELECT * FROM "_files" WHERE $whereSql$orderClause$limitClause',
           ),
-          variables: [...variables.map((value) => Variable(value))],
+          variables: [...variables.map(toFilterVariable)],
         )
         .map((row) => db.files.map(row.data))
         .get();

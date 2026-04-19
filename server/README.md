@@ -22,7 +22,7 @@
 - **Dynamic Collections**: Create collections with custom attributes, rules, and indexes
 - **Real-time**: Server-Sent Events (SSE) for watching collections and users
 - **Admin Dashboard**: Web UI for managing your data
-- **SQLite Database**: Built-in Drift ORM with SQLite
+- **SQLite or Postgres**: Built-in Drift ORM, swap backends via env vars
 - **REST API**: Full REST API for all resources
 - **Middleware**: CORS, logging, JWT decoding, rate limiting, request injection
 - **Code Generation**: Automatic route generation and client SDK
@@ -77,6 +77,44 @@ vanestack users create -e admin@example.com -p yourpassword -s
 dart run bin/main.dart users create -e admin@example.com -p yourpassword -s
 ```
 
+## Database Backend
+
+VaneStack supports both SQLite (default) and PostgreSQL. Select the backend with environment variables — no code changes needed.
+
+**SQLite (default):**
+
+```bash
+# Uses ./data/database.sqlite by default
+vanestack start
+
+# Or point at a custom path
+VANESTACK_SQLITE_PATH=/var/lib/myapp.sqlite vanestack start
+```
+
+**PostgreSQL:**
+
+```bash
+export VANESTACK_DATABASE=postgres
+export VANESTACK_POSTGRES_URL="postgresql://user:pass@localhost:5432/mydb?sslmode=disable"
+vanestack start
+```
+
+You can also configure the backend programmatically when embedding VaneStack:
+
+```dart
+import 'package:vanestack/vanestack.dart';
+
+void main(List<String> args) async {
+  final server = VaneStack(
+    databaseBackend: DatabaseBackend.postgres,
+    postgresUrl: 'postgresql://user:pass@localhost:5432/mydb?sslmode=require',
+  );
+  await server.run(args);
+}
+```
+
+Accepted `sslmode` values: `disable`, `require` (default), `verify-full`. Schema migrations run automatically on startup for both backends.
+
 ## Adding Custom Routes
 
 Use the `addRoute` method to register custom endpoints:
@@ -104,7 +142,7 @@ Routes added with `addRoute` are automatically included in the generated client 
 VaneStack is built with:
 
 - **Server**: Shelf web framework
-- **Database**: Drift ORM with SQLite
+- **Database**: Drift ORM with SQLite (default) or PostgreSQL
 - **Auth**: JWT tokens with refresh tokens
 - **Real-time**: Server-Sent Events
 - **Dashboard**: Jaspr web app

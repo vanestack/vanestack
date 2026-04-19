@@ -25,7 +25,7 @@ class UsersProvider extends AsyncNotifier<ListUsersResult> {
     return client.users.list(
       offset: page * perPage,
       limit: perPage,
-      filter: Filter.where('super_user', isEqualTo: 0).build(),
+      filter: Filter.where('super_user', isEqualTo: false).build(),
       orderBy: OrderBy(order.$1, direction: order.$2).build(),
     );
   }

@@ -10,7 +10,7 @@ class SuperusersProvider extends AsyncNotifier<ListUsersResult> {
   Future<ListUsersResult> build() async {
     final client = ref.watch(clientProvider);
     return client.users.list(
-      filter: Filter.where('super_user', isEqualTo: 1).build(),
+      filter: Filter.where('super_user', isEqualTo: true).build(),
       orderBy: OrderBy('created_at', direction: SortDirection.desc).build(),
     );
   }

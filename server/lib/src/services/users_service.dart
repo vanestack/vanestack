@@ -186,7 +186,7 @@ class UsersService {
             'SELECT * FROM "_users"$whereClause$orderClause LIMIT ? OFFSET ?',
           ),
           variables: [
-            ...variables.map((value) => Variable(value)),
+            ...variables.map(toFilterVariable),
             Variable<int>(limit),
             Variable<int>(offset),
           ],
@@ -199,7 +199,7 @@ class UsersService {
           db.adaptPlaceholders(
             'SELECT COUNT(*) AS c FROM "_users"$whereClause',
           ),
-          variables: [...variables.map((value) => Variable(value))],
+          variables: [...variables.map(toFilterVariable)],
         )
         .map((row) => row.read<int>('c'))
         .getSingle();
@@ -333,9 +333,9 @@ class UsersService {
   /// Batch-fetches provider names for a list of user IDs.
   Future<Map<String, List<String>>> _getProviders(List<String> userIds) async {
     if (userIds.isEmpty) return {};
-    final rows = await (db.externalAuths.select()
-          ..where((e) => e.userId.isIn(userIds)))
-        .get();
+    final rows =
+        await (db.externalAuths.select()..where((e) => e.userId.isIn(userIds)))
+            .get();
     final map = <String, List<String>>{};
     for (final row in rows) {
       (map[row.userId] ??= []).add(row.provider);

@@ -55,7 +55,7 @@ To add: create file → export from `services.dart` → inject `ServiceContext`.
 
 ## Database
 
-Drift ORM + SQLite. Tables in `lib/database/tables/`. Schema changes require `build_runner build`. File: `./data/database.sqlite`.
+Drift ORM with SQLite (default) or PostgreSQL backends. Tables in `lib/database/tables/`. Schema changes require `build_runner build`. Select backend via `VANESTACK_DATABASE=sqlite|postgres`; SQLite path via `VANESTACK_SQLITE_PATH` (default `./data/database.sqlite`), Postgres via `VANESTACK_POSTGRES_URL`.
 
 ## Dashboard (Jaspr)
 

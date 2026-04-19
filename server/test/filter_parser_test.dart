@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:vanestack/src/utils/filter_parser.dart';
 import 'package:test/test.dart';
 
@@ -114,6 +115,29 @@ void main() {
 
       expect(sql, equals("name NOT LIKE ?"));
       expect(params, equals(['A%e']));
+    });
+
+    test('preserves boolean literals as Dart bools', () {
+      final (_, params) = FilterParser('super_user = true').parse();
+      expect(params, equals([true]));
+      expect(params.single, isA<bool>());
+
+      final (_, falseParams) = FilterParser('super_user = false').parse();
+      expect(falseParams, equals([false]));
+      expect(falseParams.single, isA<bool>());
+    });
+  });
+
+  group('toFilterVariable', () {
+    test('wraps bool as Variable<bool> so postgres binds boolean', () {
+      expect(toFilterVariable(true), isA<Variable<bool>>());
+      expect(toFilterVariable(false), isA<Variable<bool>>());
+    });
+
+    test('wraps other primitives with the matching typed Variable', () {
+      expect(toFilterVariable(42), isA<Variable<int>>());
+      expect(toFilterVariable(3.14), isA<Variable<double>>());
+      expect(toFilterVariable('hello'), isA<Variable<String>>());
     });
   });
 

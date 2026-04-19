@@ -1,6 +1,6 @@
 name: vanestack_dashboard
 description: A new Jaspr project
-version: 0.0.1
+version: 0.0.2
 publish_to: none
 
 environment:
@@ -8,9 +8,9 @@ environment:
 
 dependencies:
   intl: ^0.20.2
-  jaspr: ^0.22.4
-  jaspr_riverpod: ^0.4.2
-  jaspr_router: ^0.8.1
+  jaspr: ^0.23.0
+  jaspr_riverpod: ^0.4.5
+  jaspr_router: ^0.8.2
   universal_web: ^1.1.1+1
   vanestack_client: ^0.1.1+1
   vanestack_common: ^0.1.1
@@ -21,7 +21,7 @@ dependencies:
 dev_dependencies:
   build_runner: ^2.10.0
   build_web_compilers: ^4.4.6
-  jaspr_builder: ^0.22.4
+  jaspr_builder: ^0.23.0
   lints: ^5.0.0
 
 jaspr:

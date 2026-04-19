@@ -3,8 +3,9 @@ import 'dart:io' as io;
 import 'package:vanestack_common/vanestack_common.dart';
 import 'package:drift/drift.dart' hide Index;
 import 'package:drift/native.dart';
-import 'package:drift_postgres/drift_postgres.dart';
 import 'package:postgres/postgres.dart' as pg;
+
+import 'concurrent_pg_database.dart';
 
 import 'package:sqlite3/sqlite3.dart';
 import 'package:uuid/uuid.dart';
@@ -199,16 +200,24 @@ class AppDatabase extends _$AppDatabase {
       _ => pg.SslMode.require,
     };
 
-    return PgDatabase(
-      endpoint: pg.Endpoint(
-        host: uri.host.isEmpty ? 'localhost' : uri.host,
-        port: uri.hasPort ? uri.port : 5432,
-        database: database,
-        username: username,
-        password: password,
+    final pool = pg.Pool.withEndpoints(
+      [
+        pg.Endpoint(
+          host: uri.host.isEmpty ? 'localhost' : uri.host,
+          port: uri.hasPort ? uri.port : 5432,
+          database: database,
+          username: username,
+          password: password,
+        ),
+      ],
+      settings: pg.PoolSettings(
+        maxConnectionCount: 5,
+        sslMode: sslMode,
+        applicationName: 'vanestack',
       ),
-      settings: pg.ConnectionSettings(sslMode: sslMode),
     );
+
+    return ConcurrentPgDatabase.pool(pool);
   }
 
   static void setup(Database database) {

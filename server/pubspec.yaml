@@ -1,6 +1,6 @@
 name: vanestack
 description: A Dart backend framework with built-in auth, database, realtime, and admin dashboard.
-version: 0.1.2
+version: 0.1.3
 repository: https://github.com/vanestack/vanestack
 homepage: https://vanestack.dev
 resolution: workspace

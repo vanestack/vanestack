@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2026-04-19
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`vanestack` - `v0.1.3`](#vanestack---v013)
+
+---
+
+#### `vanestack` - `v0.1.3`
+
+ - **REFACTOR**(collections): batch generate documents.
+ - **FIX**(services): optimize database queries by fetching related data in parallel.
+ - **FIX**: Fix jaspr broken input for files.
+ - **FIX**(collections): cache collection metadata in-memory.
+ - **FIX**: Postgres variable types and filters compatibility.
+ - **FEAT**(database): implement concurrent Postgres database support.
+ - **FEAT**(stats): optimize stats endpoint with dialect-specific SQL.
+ - **FEAT**: add support for PostgreSQL backend.
+
+
 ## 2026-04-02
 
 ### Changes

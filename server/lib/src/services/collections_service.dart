@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:vanestack_common/vanestack_common.dart';
 import 'package:drift/drift.dart' hide Index;
@@ -984,40 +985,78 @@ class CollectionsService {
 
     final faker = Faker();
     final uuid = const Uuid();
-    final created = await db.transaction(() async {
-      var createdCount = 0;
 
-      for (var i = 0; i < count; i++) {
-        final timestamp = DateTime.now();
-        final data = _generateFakeData(baseCollection.attributes, faker);
+    final docs = <Document>[];
+    final rows = <Map<String, Object?>>[];
 
-        final newDoc = Document(
-          id: uuid.v7(),
-          collection: baseCollection.name,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-          data: data,
+    for (var i = 0; i < count; i++) {
+      final timestamp = DateTime.now();
+      final data = _generateFakeData(baseCollection.attributes, faker);
+
+      final newDoc = Document(
+        id: uuid.v7(),
+        collection: baseCollection.name,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        data: data,
+      );
+
+      docs.add(newDoc);
+      rows.add(CollectionUtils.documentToRow(baseCollection, newDoc));
+    }
+
+    await db.batch((batch) async {
+      if (db.executor.dialect == SqlDialect.postgres) {
+        if (rows.isEmpty) return;
+
+        final columns = rows.first.keys.toList();
+        final quotedCols = columns.map((k) => '"$k"').join(', ');
+
+        const maxParamsPerStatement = 60000;
+        final rowsPerChunk = (maxParamsPerStatement ~/ columns.length).clamp(
+          1,
+          rows.length,
         );
 
-        final encodedData = CollectionUtils.documentToRow(
-          baseCollection,
-          newDoc,
-        );
+        final singleRowPlaceholders =
+            '(${List.filled(columns.length, '?').join(', ')})';
 
-        await db.customStatement(
-          db.adaptPlaceholders(
-            'INSERT INTO "$collectionName" (${encodedData.keys.map((k) => '"$k"').join(', ')}) VALUES (${List.filled(encodedData.length, '?').join(', ')})',
-          ),
-          [...encodedData.values],
-        );
+        for (var start = 0; start < rows.length; start += rowsPerChunk) {
+          final end = math.min(start + rowsPerChunk, rows.length);
+          final chunk = rows.sublist(start, end);
 
-        createdCount++;
+          final allPlaceholders = List.filled(
+            chunk.length,
+            singleRowPlaceholders,
+          ).join(', ');
+
+          final values = <Object?>[
+            for (final row in chunk)
+              for (final col in columns) row[col],
+          ];
+
+          batch.customStatement(
+            db.adaptPlaceholders(
+              'INSERT INTO "$collectionName" ($quotedCols) VALUES $allPlaceholders',
+            ),
+            values,
+          );
+        }
+      } else {
+        for (final row in rows) {
+          batch.customStatement(
+            db.adaptPlaceholders(
+              'INSERT INTO "$collectionName" '
+              '(${row.keys.map((k) => '"$k"').join(', ')}) '
+              'VALUES (${List.filled(row.length, '?').join(', ')})',
+            ),
+            [...row.values],
+          );
+        }
       }
-
-      return createdCount;
     });
 
-    return GenerateResponse(count: created);
+    return GenerateResponse(count: rows.length);
   }
 
   // ==================== Private Helper Methods ====================

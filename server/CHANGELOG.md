@@ -1,3 +1,14 @@
+## 0.1.3
+
+ - **REFACTOR**(collections): batch generate documents.
+ - **FIX**(services): optimize database queries by fetching related data in parallel.
+ - **FIX**: Fix jaspr broken input for files.
+ - **FIX**(collections): cache collection metadata in-memory.
+ - **FIX**: Postgres variable types and filters compatibility.
+ - **FEAT**(database): implement concurrent Postgres database support.
+ - **FEAT**(stats): optimize stats endpoint with dialect-specific SQL.
+ - **FEAT**: add support for PostgreSQL backend.
+
 ## 0.1.2
 
  - **FIX**(server): reduce OTP expiry from 1 hour to 10 minutes.
